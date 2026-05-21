@@ -11,12 +11,13 @@ Goal: Transform Coding-Autopilot-System into a job-landing enterprise portfolio.
 
 **Requirements:** FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05
 
-**Plans:**
-1. Add GitHub topics to all three repos (gsd-orchestrator, Promptimprover, autogen)
-2. Create `profile/README.md` in `.github` repo — org landing page with system diagram
-3. Add MIT LICENSE to all repos missing it
-4. Update all repo descriptions to be concise and employer-facing
-5. Ensure ci-autopilot is not featured/pinned
+**Plans:** 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Set GitHub topics (FOUND-01) and descriptions (FOUND-05) on all three repos
+- [ ] 01-02-PLAN.md — Create MIT LICENSE files in gsd-orchestrator, Promptimprover, and autogen (FOUND-03)
+- [ ] 01-03-PLAN.md — Rewrite org profile README with system diagram and project cards (FOUND-02)
+- [ ] 01-04-PLAN.md — Verify and pin portfolio repos; exclude ci-autopilot from org featured (FOUND-04)
 
 **Success Criteria:**
 - Searching "autonomous-agent dotnet" on GitHub surfaces gsd-orchestrator
