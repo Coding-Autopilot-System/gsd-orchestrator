@@ -509,8 +509,8 @@ EOF
 
 ### Wave 0 Gaps
 
-- [ ] Verification script `verify-phase1.sh` — runs all 5 requirement checks in sequence
-- [ ] No test framework needed — all verification is via `gh api` CLI calls
+- [x] Verification script `verify-phase1.sh` — not needed; inline `<verify>` blocks in each plan cover all 5 requirement checks. No separate script required.
+- [x] No test framework needed — all verification is via `gh api` CLI calls
 
 ---
 
@@ -548,17 +548,19 @@ EOF
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Promptimprover `master` vs `main` branch**
    - What we know: Default branch is `master` (verified via API)
    - What's unclear: Should we rename it to `main` as part of Phase 1, or leave it?
    - Recommendation: Leave for Phase 4 (Promptimprover Polish). Phase 1 should only target LICENSE/topics/description. Add note to Phase 4 research.
+   - **RESOLVED: Leave Promptimprover master branch rename for Phase 4 -- do not rename in Phase 1.**
 
 2. **FOUND-04 manual step confirmation**
    - What we know: No API exists for org pinning; the user must do this in GitHub UI
    - What's unclear: Whether the user is aware this is a manual step
    - Recommendation: Include explicit manual step task in PLAN.md with exact UI navigation instructions (Settings → Customize your organization → Pin repositories)
+   - **RESOLVED: Include FOUND-04 as checkpoint:human-action task -- already implemented in Plan 01-04.**
 
 ---
 
