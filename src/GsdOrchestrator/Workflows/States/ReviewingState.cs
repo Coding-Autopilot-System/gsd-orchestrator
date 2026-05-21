@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using GsdOrchestrator.Mcp;
 using GsdOrchestrator.Workflows.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GsdOrchestrator.Workflows.States;
@@ -39,11 +40,11 @@ public sealed class ReviewingState : IWorkflowState
         // Post a self-review comment explaining what the automation did
         var comment = await GenerateReviewCommentAsync(issue, plan, edits, pr, ct);
 
-        await _mcp.CallAsync("add_pull_request_review_comment", new JsonObject
+        await _mcp.CallAsync("add_issue_comment", new JsonObject
         {
             ["owner"] = issue.RepoOwner,
             ["repo"] = issue.RepoName,
-            ["pullNumber"] = pr.PrNumber,
+            ["issue_number"] = pr.PrNumber,
             ["body"] = comment
         }, ct);
 

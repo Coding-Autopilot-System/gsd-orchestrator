@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using GsdOrchestrator.Mcp;
 using GsdOrchestrator.Workflows.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GsdOrchestrator.Workflows.States;
@@ -11,19 +12,22 @@ namespace GsdOrchestrator.Workflows.States;
 /// Auto-documents two things on the default branch (not the feature branch):
 /// 1. docs/github-mcp-tools.md — regenerated from tools/list, no LLM needed
 /// 2. CHANGELOG.md — prepended with a new entry for this workflow
+/// If GSD_AUTO_MERGE=true, squash-merges the PR after documentation is done.
 /// </summary>
 public sealed class DocumentingState : IWorkflowState
 {
     private readonly McpToolDispatcher _mcp;
     private readonly IChatClient _llm;
+    private readonly bool _autoMerge;
     private readonly ILogger<DocumentingState> _logger;
 
     public WorkflowState State => WorkflowState.Documenting;
 
-    public DocumentingState(McpToolDispatcher mcp, IChatClient llm, ILogger<DocumentingState> logger)
+    public DocumentingState(McpToolDispatcher mcp, IChatClient llm, IConfiguration config, ILogger<DocumentingState> logger)
     {
         _mcp = mcp;
         _llm = llm;
+        _autoMerge = string.Equals(config["GSD_AUTO_MERGE"], "true", StringComparison.OrdinalIgnoreCase);
         _logger = logger;
     }
 
@@ -37,7 +41,34 @@ public sealed class DocumentingState : IWorkflowState
             UpdateChangelogAsync(issue, ctx.Plan!, ctx.Edits!, ctx.PullRequest!, ctx.Issue!.DefaultBranch, ct));
 
         _logger.LogInformation("Documentation updated on {Branch}", issue.DefaultBranch);
+
+        if (_autoMerge && ctx.PullRequest is not null)
+            await AutoMergeAsync(issue, ctx.PullRequest, ct);
+
         return ctx.Transition(WorkflowState.Done);
+    }
+
+    // ── Auto-merge ───────────────────────────────────────────────────────────
+
+    private async Task AutoMergeAsync(IssueContext issue, PullRequestContext pr, CancellationToken ct)
+    {
+        _logger.LogInformation("Auto-merging PR #{Number}", pr.PrNumber);
+        try
+        {
+            await _mcp.CallAsync("merge_pull_request", new JsonObject
+            {
+                ["owner"] = issue.RepoOwner,
+                ["repo"] = issue.RepoName,
+                ["pullNumber"] = pr.PrNumber,
+                ["merge_method"] = "squash",
+                ["commit_title"] = pr.Title
+            }, ct);
+            _logger.LogInformation("PR #{Number} squash-merged", pr.PrNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Auto-merge failed for PR #{Number} — continuing to Done", pr.PrNumber);
+        }
     }
 
     // ── 1. MCP Tool Catalog ─────────────────────────────────────────────────

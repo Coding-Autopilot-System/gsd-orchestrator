@@ -14,6 +14,7 @@ namespace GsdOrchestrator.Mcp;
 public sealed class McpStdioClient : IMcpClient
 {
     private readonly string _githubToken;
+    private readonly string _binaryPath;
     private readonly ILogger<McpStdioClient> _logger;
 
     private Process? _process;
@@ -29,9 +30,10 @@ public sealed class McpStdioClient : IMcpClient
 
     private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = false };
 
-    public McpStdioClient(string githubToken, ILogger<McpStdioClient> logger)
+    public McpStdioClient(string githubToken, string binaryPath, ILogger<McpStdioClient> logger)
     {
         _githubToken = githubToken;
+        _binaryPath = binaryPath;
         _logger = logger;
     }
 
@@ -41,14 +43,14 @@ public sealed class McpStdioClient : IMcpClient
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "npx",
-                Arguments = "-y @github/github-mcp-server stdio",
+                FileName = _binaryPath,
+                Arguments = "stdio",
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Environment = { ["GITHUB_TOKEN"] = _githubToken }
+                Environment = { ["GITHUB_PERSONAL_ACCESS_TOKEN"] = _githubToken }
             },
             EnableRaisingEvents = true
         };

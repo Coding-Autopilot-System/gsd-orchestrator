@@ -16,17 +16,21 @@ DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4
 // ── Simple args parsing ───────────────────────────────────────────────────────
 int? issueNumber = null;
 string? resumeId = null;
-for (int i = 0; i < args.Length - 1; i++)
+bool watchMode = false;
+
+for (int i = 0; i < args.Length; i++)
 {
-    if (args[i] == "--issue" && int.TryParse(args[i + 1], out var n)) issueNumber = n;
-    if (args[i] == "--resume") resumeId = args[i + 1];
+    if (args[i] == "--issue" && i + 1 < args.Length && int.TryParse(args[i + 1], out var n)) issueNumber = n;
+    if (args[i] == "--resume" && i + 1 < args.Length) resumeId = args[i + 1];
+    if (args[i] == "--watch") watchMode = true;
 }
 
-if (issueNumber is null && resumeId is null)
+if (issueNumber is null && resumeId is null && !watchMode)
 {
     Console.Error.WriteLine("Usage:");
-    Console.Error.WriteLine("  dotnet run -- --issue <number>");
-    Console.Error.WriteLine("  dotnet run -- --resume <workflow-id>");
+    Console.Error.WriteLine("  dotnet run -- --issue <number>       Run workflow for a specific issue");
+    Console.Error.WriteLine("  dotnet run -- --resume <workflow-id> Resume an interrupted workflow");
+    Console.Error.WriteLine("  dotnet run -- --watch                Poll open issues and process them automatically");
     Environment.Exit(1);
 }
 
@@ -41,11 +45,13 @@ builder.Services.AddLogging(lb => lb.AddFilter("Microsoft", LogLevel.Warning));
 builder.Services.AddSingleton<GitHubPatProvider>();
 
 // ── MCP Client ───────────────────────────────────────────────────────────────
+var binaryPath = builder.Configuration["GSD_MCP_BINARY"] ?? FindMcpBinary();
+
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var pat = sp.GetRequiredService<GitHubPatProvider>();
     var logger = sp.GetRequiredService<ILogger<McpStdioClient>>();
-    return new McpStdioClient(pat.Token, logger);
+    return new McpStdioClient(pat.Token, binaryPath, logger);
 });
 builder.Services.AddSingleton<McpToolDispatcher>();
 
@@ -102,37 +108,116 @@ var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 // Initialize MCP server process
 await mcp.InitializeAsync();
-logger.LogInformation("GitHub MCP Server ready");
+logger.LogInformation("GitHub MCP Server ready (binary: {Binary})", binaryPath);
 
-GsdWorkflowContext result;
+var owner = config["GSD_GITHUB_OWNER"]
+    ?? throw new InvalidOperationException("GSD_GITHUB_OWNER not set");
+var repo = config["GSD_GITHUB_REPO"]
+    ?? throw new InvalidOperationException("GSD_GITHUB_REPO not set");
 
-if (resumeId is not null)
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+var mcpDispatcher = host.Services.GetRequiredService<McpToolDispatcher>();
+
+if (watchMode)
 {
-    result = await sm.ResumeAsync(resumeId, CancellationToken.None);
+    await RunWatchModeAsync(sm, mcpDispatcher, owner, repo, logger, cts.Token);
+}
+else if (resumeId is not null)
+{
+    var result = await sm.ResumeAsync(resumeId, cts.Token);
+    PrintResult(result);
 }
 else
 {
-    var owner = config["GSD_GITHUB_OWNER"]
-        ?? throw new InvalidOperationException("GSD_GITHUB_OWNER not set");
-    var repo = config["GSD_GITHUB_REPO"]
-        ?? throw new InvalidOperationException("GSD_GITHUB_REPO not set");
-
-    result = await sm.RunAsync(owner, repo, issueNumber!.Value, CancellationToken.None);
+    var result = await sm.RunAsync(owner, repo, issueNumber!.Value, cts.Token);
+    PrintResult(result);
 }
 
 await (mcp as IAsyncDisposable)!.DisposeAsync();
 
-if (result.CurrentState == WorkflowState.Done)
+// ── Watch mode ────────────────────────────────────────────────────────────────
+static async Task RunWatchModeAsync(
+    GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
+    string owner, string repo,
+    ILogger logger, CancellationToken ct)
 {
-    Console.WriteLine();
-    Console.WriteLine($"✓ PR created:   {result.PullRequest?.PrUrl}");
-    Console.WriteLine($"✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md");
-    Console.WriteLine($"  Workflow ID:  {result.WorkflowId}");
-    Environment.Exit(0);
+    var pollInterval = TimeSpan.FromMinutes(5);
+    var processedIssues = new HashSet<int>();
+    logger.LogInformation("Watch mode started — polling {Owner}/{Repo} every {Interval}m", owner, repo, pollInterval.TotalMinutes);
+
+    while (!ct.IsCancellationRequested)
+    {
+        try
+        {
+            // List open issues via MCP
+            var result = await mcpDispatcher.CallAsync("list_issues", new System.Text.Json.Nodes.JsonObject
+            {
+                ["owner"] = owner,
+                ["repo"] = repo,
+                ["state"] = "open",
+                ["perPage"] = 20
+            }, ct);
+
+            var issues = result.ParseInnerJson()?.AsArray() ?? [];
+            var openNumbers = issues
+                .Select(i => i?["number"]?.GetValue<int>())
+                .Where(n => n.HasValue)
+                .Select(n => n!.Value)
+                .ToList();
+
+            var pending = openNumbers.Except(processedIssues).ToList();
+            logger.LogInformation("Watch: {Open} open issues, {Pending} unprocessed", openNumbers.Count, pending.Count);
+
+            foreach (var num in pending)
+            {
+                if (ct.IsCancellationRequested) break;
+                logger.LogInformation("Processing issue #{Number}", num);
+                var ctx = await sm.RunAsync(owner, repo, num, ct);
+                processedIssues.Add(num);
+                PrintResult(ctx);
+            }
+        }
+        catch (OperationCanceledException) { break; }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Watch loop error — retrying in {Interval}m", pollInterval.TotalMinutes);
+        }
+
+        try { await Task.Delay(pollInterval, ct); }
+        catch (OperationCanceledException) { break; }
+    }
+
+    logger.LogInformation("Watch mode stopped");
 }
-else
+
+static void PrintResult(GsdWorkflowContext result)
 {
-    Console.Error.WriteLine($"✗ Workflow failed: {result.FailureReason}");
-    Console.Error.WriteLine($"  Resume with: dotnet run -- --resume {result.WorkflowId}");
-    Environment.Exit(1);
+    if (result.CurrentState == WorkflowState.Done)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"✓ PR created:   {result.PullRequest?.PrUrl}");
+        Console.WriteLine($"✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md");
+        Console.WriteLine($"  Workflow ID:  {result.WorkflowId}");
+    }
+    else
+    {
+        Console.Error.WriteLine($"✗ Workflow failed: {result.FailureReason}");
+        Console.Error.WriteLine($"  Resume with: dotnet run -- --resume {result.WorkflowId}");
+    }
+}
+
+// ── Binary discovery ──────────────────────────────────────────────────────────
+static string FindMcpBinary()
+{
+    var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
+    while (dir is not null)
+    {
+        var candidate = Path.Combine(dir.FullName, "github-mcp-server.exe");
+        if (File.Exists(candidate)) return candidate;
+        dir = dir.Parent;
+    }
+    // Fallback: hope it's on PATH
+    return "github-mcp-server.exe";
 }
