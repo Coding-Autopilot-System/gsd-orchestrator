@@ -1,0 +1,21 @@
+# Secrets — never commit
+.env
+
+# GSD workflow state (contains issue context, file contents)
+.gsd/
+
+# .NET build artifacts
+bin/
+obj/
+*.user
+.vs/
+*.suo
+
+# NuGet
+*.nupkg
+packages/
+
+# OS
+.DS_Store
+Thumbs.db
+.claude/
