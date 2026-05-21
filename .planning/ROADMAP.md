@@ -1,0 +1,157 @@
+# Roadmap — Enterprise GitHub Portfolio
+
+**Milestone 1.0 — Portfolio Launch**
+Goal: Transform Coding-Autopilot-System into a job-landing enterprise portfolio.
+
+---
+
+## Phase 1 — Foundation & Quick Wins
+
+**Goal:** Every repo is discoverable, described, and legally clean. Org profile exists. Noise removed.
+
+**Requirements:** FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05
+
+**Plans:**
+1. Add GitHub topics to all three repos (gsd-orchestrator, Promptimprover, autogen)
+2. Create `profile/README.md` in `.github` repo — org landing page with system diagram
+3. Add MIT LICENSE to all repos missing it
+4. Update all repo descriptions to be concise and employer-facing
+5. Ensure ci-autopilot is not featured/pinned
+
+**Success Criteria:**
+- Searching "autonomous-agent dotnet" on GitHub surfaces gsd-orchestrator
+- Org page shows a profile README with system diagram
+- All three repos have green license badge
+- ci-autopilot not visible as first impression of the org
+
+**Depends on:** Nothing
+**Estimated effort:** Small (metadata + file creation)
+
+---
+
+## Phase 2 — gsd-orchestrator CI & Diagrams
+
+**Goal:** gsd-orchestrator has a passing CI badge and architecture diagrams that demonstrate systems thinking.
+
+**Requirements:** GSD-01, GSD-02, GSD-03, GSD-09
+
+**Plans:**
+1. Create `.github/workflows/ci.yml` — .NET 10 restore/build on windows-latest
+2. Add Mermaid state machine diagram to README (Idle → Analyzing → ... → Done)
+3. Add Mermaid component diagram to README (orchestrator ↔ MCP server ↔ Claude API)
+4. Update README badges section (CI, .NET 10, License)
+
+**Success Criteria:**
+- CI runs green on push to main
+- README shows passing CI badge
+- Two Mermaid diagrams render correctly on GitHub
+- A hiring manager can understand the system in 60 seconds from the README
+
+**Depends on:** Phase 1 (LICENSE for badge)
+**Estimated effort:** Small-medium
+
+---
+
+## Phase 3 — gsd-orchestrator Wiki & Release
+
+**Goal:** gsd-orchestrator has enterprise-grade documentation and a v1.0.0 release.
+
+**Requirements:** GSD-04, GSD-05, GSD-06, GSD-07, GSD-08
+
+**Plans:**
+1. Create Wiki Home page — overview, quick nav, key badges
+2. Create Wiki Setup Guide — prerequisites, clone, .env config, run
+3. Create Wiki Architecture page — state machine walkthrough, component descriptions
+4. Create Wiki Configuration Reference — all env vars, types, defaults
+5. Create GitHub Release v1.0.0 with changelog
+
+**Success Criteria:**
+- Wiki has 4 pages, all with substantive content
+- Release v1.0.0 appears on repo page
+- Setup Guide tested — instructions are copy-pasteable and accurate
+- Architecture page has at least one diagram
+
+**Depends on:** Phase 2 (CI must pass before releasing)
+**Estimated effort:** Medium
+
+---
+
+## Phase 4 — Promptimprover Polish
+
+**Goal:** Promptimprover has an enterprise README, passing CI, and Wiki.
+
+**Requirements:** PI-01, PI-02, PI-03, PI-04, PI-05
+
+**Plans:**
+1. Rewrite README — remove emoji overload, add hero line, architecture section, proper badges
+2. Create `.github/workflows/ci.yml` — Node 22 / TypeScript build
+3. Create Wiki (4 pages: Home, Setup, Architecture, Config Reference)
+4. Add cross-repo links (org badge, sibling project links)
+
+**Success Criteria:**
+- README no longer uses "starter kit" or internal language
+- CI badge is green
+- Wiki has 4 pages
+- README links to gsd-orchestrator and autogen
+
+**Depends on:** Phase 1
+**Estimated effort:** Medium
+
+---
+
+## Phase 5 — autogen Polish
+
+**Goal:** autogen has an enterprise README, passing CI, and Wiki.
+
+**Requirements:** AG-01, AG-02, AG-03, AG-04, AG-05
+
+**Plans:**
+1. Rewrite README — remove "starter kit" framing, add proper architecture description
+2. Create `.github/workflows/ci.yml` — Python 3.12 with pip install
+3. Create Wiki (4 pages: Home, Setup, Architecture, Config Reference)
+4. Add cross-repo links (org badge, sibling project links)
+
+**Success Criteria:**
+- README positions autogen as "enterprise multi-agent system" not "starter"
+- CI badge is green
+- Wiki has 4 pages
+- README links to gsd-orchestrator and Promptimprover
+
+**Depends on:** Phase 1
+**Estimated effort:** Medium
+
+---
+
+## Phase 6 — Coherence & Personal Profile
+
+**Goal:** All repos tell one story. Personal profile connects identity to the work.
+
+**Requirements:** COH-01, COH-02, COH-03
+
+**Plans:**
+1. Create OgeonX-Ai personal profile README (GitHub profile repo)
+2. Add "Part of Coding-Autopilot-System" badge/link to all three READMEs
+3. Update org profile README with final system diagram linking all three repos
+
+**Success Criteria:**
+- OgeonX-Ai GitHub profile shows portfolio work
+- Any repo README leads to the org and the other two repos
+- Org profile README is the definitive landing page for the portfolio
+
+**Depends on:** Phases 2-5 (all repos polished before linking them)
+**Estimated effort:** Small
+
+---
+
+## Coverage Check
+
+| Requirement | Phase |
+|-------------|-------|
+| FOUND-01–05 | 1 |
+| GSD-01, 02, 03, 09 | 2 |
+| GSD-04, 05, 06, 07, 08 | 3 |
+| PI-01–05 | 4 |
+| AG-01–05 | 5 |
+| COH-01–03 | 6 |
+
+**All 23 requirements covered across 6 phases ✓**
