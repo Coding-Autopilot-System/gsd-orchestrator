@@ -36,11 +36,11 @@ Plans:
 
 **Requirements:** GSD-01, GSD-02, GSD-03, GSD-09
 
-**Plans:**
-1. Create `.github/workflows/ci.yml` — .NET 10 restore/build on windows-latest
-2. Add Mermaid state machine diagram to README (Idle → Analyzing → ... → Done)
-3. Add Mermaid component diagram to README (orchestrator ↔ MCP server ↔ Claude API)
-4. Update README badges section (CI, .NET 10, License)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Create .github/workflows/ci.yml (.NET 10 build on windows-latest) (GSD-01)
+- [ ] 02-02-PLAN.md — Add badges, stateDiagram-v2 state machine, and flowchart component diagram to README (GSD-02, GSD-03, GSD-09)
 
 **Success Criteria:**
 - CI runs green on push to main
