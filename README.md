@@ -4,6 +4,10 @@ Autonomous GitHub agentic workflow system. Point it at a GitHub issue and it rea
 
 **Stack:** .NET 10 (C#) · GitHub MCP Server · Anthropic Claude · Polly
 
+[![CI](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 ---
 
 ## How it works
