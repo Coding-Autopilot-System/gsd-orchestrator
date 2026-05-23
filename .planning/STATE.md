@@ -85,4 +85,4 @@ progress:
 
 ## Next Action
 
-Run `/gsd-discuss-phase 4` to plan Phase 4 (Promptimprover Polish).
+Run `/gsd-plan-phase 4` to plan Phase 4 (Promptimprover Polish). Context gathered 2026-05-23.
