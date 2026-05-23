@@ -553,12 +553,12 @@ Phase 3 creates only documentation and a GitHub Release tag. No authentication l
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Wiki branch name for push target**
+1. **Wiki branch name for push target** — RESOLVED: Use `master`; fallback `git push origin HEAD` per 03-01-PLAN.md Task 2 action. Decision reflected in plan with concrete fallback strategy.
    - What we know: GitHub wiki docs say clone and push; Phase 2 SUMMARY.md does not address this
-   - What's unclear: Whether the target branch is `master` or configurable; research indicates `master` but this is ASSUMED
-   - Recommendation: On first `git push`, if `master` fails, try `HEAD` — the push will create the correct tracking branch automatically
+   - What was unclear: Whether the target branch is `master` or configurable; research indicates `master` but this was ASSUMED
+   - Resolution: Plan handles with explicit `master` target + `git push origin HEAD` fallback if master fails
 
 ---
 
