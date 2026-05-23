@@ -69,8 +69,8 @@ A hiring manager should be able to spend 5 minutes on the GitHub org and immedia
 
 - [ ] All repos have correct GitHub topics for discoverability
 - [ ] Org .github profile README showcases all three projects as a system
-- [ ] gsd-orchestrator has GitHub Actions CI (.NET build)
-- [ ] gsd-orchestrator has Mermaid architecture diagram in README
+- [x] gsd-orchestrator has GitHub Actions CI (.NET build) — Validated in Phase 2: CI green, badge live
+- [x] gsd-orchestrator has Mermaid architecture diagram in README — Validated in Phase 2: stateDiagram-v2 + flowchart LR
 - [ ] gsd-orchestrator has GitHub Wiki (4+ pages)
 - [ ] gsd-orchestrator has v1.0.0 release
 - [ ] Promptimprover has updated README and GitHub Actions CI
@@ -78,7 +78,8 @@ A hiring manager should be able to spend 5 minutes on the GitHub org and immedia
 - [ ] autogen has updated README and GitHub Actions CI
 - [ ] autogen has GitHub Wiki
 - [ ] Personal OgeonX-Ai profile README links to org and highlights top projects
-- [ ] All READMEs have CI/version badges
+- [x] gsd-orchestrator README has CI / .NET 10 / License badges — Validated in Phase 2
+- [ ] Promptimprover and autogen READMEs have CI/version badges
 
 ### Out of Scope
 
@@ -100,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-21 after initialization*
+*Last updated: 2026-05-23 — Phase 2 complete (CI, badges, diagrams)*
