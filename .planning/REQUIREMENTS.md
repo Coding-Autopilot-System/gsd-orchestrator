@@ -15,10 +15,10 @@
 - [x] **GSD-01**: GitHub Actions CI workflow (.NET 10 build) with passing badge in README — Phase 2 ✓
 - [x] **GSD-02**: Mermaid state machine diagram in README (full workflow: Idle→Done) — Phase 2 ✓
 - [x] **GSD-03**: Mermaid component diagram in README (orchestrator ↔ MCP server ↔ Claude) — Phase 2 ✓
-- [ ] **GSD-04**: GitHub Wiki — Home page with overview and navigation
-- [ ] **GSD-05**: GitHub Wiki — Setup Guide (prerequisites, clone, .env, first run)
-- [ ] **GSD-06**: GitHub Wiki — Architecture deep-dive (state machine, components, data flow)
-- [ ] **GSD-07**: GitHub Wiki — Configuration Reference (all env vars)
+- [x] **GSD-04**: GitHub Wiki — Home page with overview and navigation — Phase 3 (03-01) ✓
+- [x] **GSD-05**: GitHub Wiki — Setup Guide (prerequisites, clone, .env, first run) — Phase 3 (03-01) ✓
+- [x] **GSD-06**: GitHub Wiki — Architecture deep-dive (state machine, components, data flow) — Phase 3 (03-01) ✓
+- [x] **GSD-07**: GitHub Wiki — Configuration Reference (all env vars) — Phase 3 (03-01) ✓
 - [ ] **GSD-08**: GitHub Release v1.0.0 with changelog
 - [x] **GSD-09**: README badges: CI, .NET 10, License — Phase 2 ✓
 

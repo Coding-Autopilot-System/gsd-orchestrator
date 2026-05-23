@@ -62,8 +62,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 03-00-PLAN.md — Manual checkpoint: initialize wiki.git via GitHub web UI (GSD-04, GSD-05, GSD-06, GSD-07 blocker)
-- [ ] 03-01-PLAN.md — Clone wiki repo and push all 4 pages: Home, Setup Guide, Architecture, Configuration Reference (GSD-04, GSD-05, GSD-06, GSD-07)
+- [x] 03-00-PLAN.md — Manual checkpoint: initialize wiki.git via GitHub web UI (GSD-04, GSD-05, GSD-06, GSD-07 blocker)
+- [x] 03-01-PLAN.md — Clone wiki repo and push all 4 pages: Home, Setup Guide, Architecture, Configuration Reference (GSD-04, GSD-05, GSD-06, GSD-07) — 2026-05-23
 - [ ] 03-02-PLAN.md — Create GitHub Release v1.0.0 with feature-narrative release notes (GSD-08)
 
 **Success Criteria:**
