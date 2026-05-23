@@ -19,7 +19,7 @@
 - [x] **GSD-05**: GitHub Wiki — Setup Guide (prerequisites, clone, .env, first run) — Phase 3 (03-01) ✓
 - [x] **GSD-06**: GitHub Wiki — Architecture deep-dive (state machine, components, data flow) — Phase 3 (03-01) ✓
 - [x] **GSD-07**: GitHub Wiki — Configuration Reference (all env vars) — Phase 3 (03-01) ✓
-- [ ] **GSD-08**: GitHub Release v1.0.0 with changelog
+- [x] **GSD-08**: GitHub Release v1.0.0 with feature-narrative release notes — Phase 3 (03-02) ✓
 - [x] **GSD-09**: README badges: CI, .NET 10, License — Phase 2 ✓
 
 ### Promptimprover (PI)
