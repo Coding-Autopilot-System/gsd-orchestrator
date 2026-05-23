@@ -16,7 +16,7 @@ progress:
 
 ## Current Status
 
-**Active Phase:** Phase 3 — gsd-orchestrator Wiki & Release (pending planning)
+**Active Phase:** Phase 3 — gsd-orchestrator Wiki & Release (context gathered, ready to plan)
 **Last Completed:** Phase 2 — gsd-orchestrator CI & Diagrams (2026-05-22)
 **Milestone:** 1.0 — Portfolio Launch
 **Last Updated:** 2026-05-23
@@ -63,4 +63,4 @@ progress:
 
 ## Next Action
 
-Run `/gsd-discuss-phase 3` to discuss Phase 3 (Wiki & Release) before planning.
+Run `/gsd-plan-phase 3` to plan Phase 3 (Wiki & Release). Context is ready.
