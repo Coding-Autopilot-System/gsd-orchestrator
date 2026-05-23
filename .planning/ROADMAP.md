@@ -83,17 +83,19 @@ Plans:
 
 **Requirements:** PI-01, PI-02, PI-03, PI-04, PI-05
 
-**Plans:**
-1. Rewrite README — remove emoji overload, add hero line, architecture section, proper badges
-2. Create `.github/workflows/ci.yml` — Node 22 / TypeScript build
-3. Create Wiki (4 pages: Home, Setup, Architecture, Config Reference)
-4. Add cross-repo links (org badge, sibling project links)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 04-00-PLAN.md — Manual checkpoint: initialize Promptimprover wiki.git via GitHub web UI (PI-03 blocker)
+- [ ] 04-01-PLAN.md — Create .github/workflows/ci.yml (Node 22 / TypeScript build on ubuntu-latest) (PI-02)
+- [ ] 04-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (PI-01, PI-04, PI-05)
+- [ ] 04-03-PLAN.md — Clone Promptimprover.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (PI-03)
 
 **Success Criteria:**
-- README no longer uses "starter kit" or internal language
-- CI badge is green
-- Wiki has 4 pages
-- README links to gsd-orchestrator and autogen
+- README no longer uses internal language; hero line and architecture diagram present
+- CI badge is green on master branch
+- Wiki has 4 pages with substantive content
+- README links to gsd-orchestrator and autogen via cross-repo ecosystem line
 
 **Depends on:** Phase 1
 **Estimated effort:** Medium
