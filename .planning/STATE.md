@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: planning
-last_updated: "2026-05-23T17:44:10Z"
+last_updated: "2026-05-23T19:00:00Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 9
+  total_plans: 13
   completed_plans: 9
-  percent: 100
+  percent: 69
 ---
 
 # Project State — Enterprise GitHub Portfolio
 
 ## Current Status
 
-**Active Phase:** Phase 3 — gsd-orchestrator Wiki & Release (complete ✓)
+**Active Phase:** Phase 4 — Promptimprover Polish (ready to execute — 4 plans, 3 waves)
 **Last Completed:** 03-02 — GitHub Release v1.0.0 created (2026-05-23)
 **Milestone:** 1.0 — Portfolio Launch
 **Last Updated:** 2026-05-23
@@ -28,7 +28,7 @@ progress:
 | 1 | Foundation & Quick Wins | ready (4 plans, 2 waves) |
 | 2 | gsd-orchestrator CI & Diagrams | complete ✓ (2026-05-22) |
 | 3 | gsd-orchestrator Wiki & Release | complete ✓ (2026-05-23) |
-| 4 | Promptimprover Polish | pending |
+| 4 | Promptimprover Polish | ready to execute (4 plans, 3 waves) |
 | 5 | autogen Polish | pending |
 | 6 | Coherence & Personal Profile | pending |
 
@@ -83,6 +83,15 @@ progress:
 - D-08: Feature-narrative release format targeting hiring managers
 - Release tag pinned to main HEAD SHA via --target main flag
 
+## Phase 4 Plans
+
+| Plan | Objective | Wave | Autonomous |
+|------|-----------|------|------------|
+| 04-00 | Manual checkpoint: initialize Promptimprover wiki.git via GitHub web UI | 0 | no (checkpoint) |
+| 04-01 | Create .github/workflows/ci.yml (Node 22 / TypeScript / Vitest) | 1 | yes |
+| 04-02 | Rewrite README — hero line, badges, flowchart LR, cross-repo links | 1 | yes |
+| 04-03 | Clone Promptimprover.wiki.git, write 4 pages, push to master | 2 | yes |
+
 ## Next Action
 
-Run `/gsd-plan-phase 4` to plan Phase 4 (Promptimprover Polish). Context gathered 2026-05-23.
+Run `/gsd-execute-phase 4` to execute Phase 4 (Promptimprover Polish). Plans ready 2026-05-23.

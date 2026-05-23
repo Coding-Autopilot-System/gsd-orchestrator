@@ -516,17 +516,17 @@ No missing dependencies. All operations use `gh` CLI and `git` which are confirm
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **CI badge first-run timing**
    - What we know: Badge shows "no status" until the first CI run completes after the workflow file is pushed
    - What's unclear: Whether a workflow_dispatch or immediate push is needed to trigger the first run
-   - Recommendation: The CI trigger includes `push: branches: [master]`, so pushing `ci.yml` itself will trigger the first run immediately
+   - RESOLVED: The CI trigger includes `push: branches: [master]`, so pushing `ci.yml` itself triggers the first run immediately. No separate workflow_dispatch needed.
 
 2. **`actions/checkout` version**
    - What we know: Phase 2 used `@v6` — this may have been a forward-looking choice or a typo (latest stable is v4)
    - What's unclear: Whether v6 exists as a pre-release
-   - Recommendation: Use `@v4` (confirmed current stable) unless the planner has evidence v6 is intentional
+   - RESOLVED: Use `actions/checkout@v4` (confirmed current stable). Phase 2's `@v6` was likely a typo; v4 is the current release. Plans use `@v4`.
 
 ---
 
