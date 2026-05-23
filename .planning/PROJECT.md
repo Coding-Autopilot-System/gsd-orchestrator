@@ -71,8 +71,8 @@ A hiring manager should be able to spend 5 minutes on the GitHub org and immedia
 - [ ] Org .github profile README showcases all three projects as a system
 - [x] gsd-orchestrator has GitHub Actions CI (.NET build) — Validated in Phase 2: CI green, badge live
 - [x] gsd-orchestrator has Mermaid architecture diagram in README — Validated in Phase 2: stateDiagram-v2 + flowchart LR
-- [ ] gsd-orchestrator has GitHub Wiki (4+ pages)
-- [ ] gsd-orchestrator has v1.0.0 release
+- [x] gsd-orchestrator has GitHub Wiki (4+ pages) — Validated in Phase 3: Home, Setup Guide, Architecture, Configuration Reference live
+- [x] gsd-orchestrator has v1.0.0 release — Validated in Phase 3: feature-narrative release notes, not draft/pre-release
 - [ ] Promptimprover has updated README and GitHub Actions CI
 - [ ] Promptimprover has GitHub Wiki
 - [ ] autogen has updated README and GitHub Actions CI
@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-23 — Phase 2 complete (CI, badges, diagrams)*
+*Last updated: 2026-05-23 — Phase 3 complete (Wiki 4 pages, v1.0.0 release)*
