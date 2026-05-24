@@ -86,10 +86,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 04-00-PLAN.md — Manual checkpoint: initialize Promptimprover wiki.git via GitHub web UI (PI-03 blocker)
-- [ ] 04-01-PLAN.md — Create .github/workflows/ci.yml (Node 22 / TypeScript build on ubuntu-latest) (PI-02)
-- [ ] 04-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (PI-01, PI-04, PI-05)
-- [ ] 04-03-PLAN.md — Clone Promptimprover.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (PI-03)
+- [x] 04-00-PLAN.md — Manual checkpoint: initialize Promptimprover wiki.git via GitHub web UI (PI-03 blocker) — 2026-05-24
+- [x] 04-01-PLAN.md — Create .github/workflows/ci.yml (Node 22 / TypeScript build on ubuntu-latest) (PI-02) — 2026-05-24
+- [x] 04-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (PI-01, PI-04, PI-05) — 2026-05-24
+- [x] 04-03-PLAN.md — Clone Promptimprover.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (PI-03) — 2026-05-24
 
 **Success Criteria:**
 - README no longer uses internal language; hero line and architecture diagram present
