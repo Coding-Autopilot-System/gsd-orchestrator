@@ -458,7 +458,7 @@ None — existing test infrastructure covers all phase requirements. No test fil
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should COH-03 replace the existing org profile diagram or keep it?**
    - What we know: The existing `graph TB` diagram is accurate, enterprise-appropriate, and already shows all three repos and their interactions.

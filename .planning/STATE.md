@@ -30,7 +30,7 @@ progress:
 | 3 | gsd-orchestrator Wiki & Release | complete ✓ (2026-05-23) |
 | 4 | Promptimprover Polish | complete ✓ (2026-05-24) |
 | 5 | autogen Polish | complete ✓ (2026-05-24) |
-| 6 | Coherence & Personal Profile | pending |
+| 6 | Coherence & Personal Profile | ready (2 plans, 2 waves) |
 
 ## Completed Work (pre-planning)
 
@@ -115,6 +115,13 @@ progress:
 - Wiki live: 4 pages — Home, Setup Guide, Architecture, Configuration Reference (fbee40b5)
 - Requirements AG-01, AG-02, AG-03, AG-04, AG-05 satisfied
 
+## Phase 6 Plans
+
+| Plan | Objective | Wave | Autonomous |
+|------|-----------|------|------------|
+| 06-01 | Add "Part of Coding-Autopilot-System" ecosystem line to gsd-orchestrator README | 1 | yes |
+| 06-02 | Rewrite OgeonX-Ai personal profile + surgical org profile diagram upgrade | 2 | yes |
+
 ## Next Action
 
-Run `/gsd-discuss-phase 6` or `/gsd-plan-phase 6` to begin Phase 6 (Coherence & Personal Profile).
+Run `/gsd-execute-phase 6` to execute Phase 6 (Coherence & Personal Profile).
