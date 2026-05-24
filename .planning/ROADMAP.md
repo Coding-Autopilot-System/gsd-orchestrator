@@ -108,16 +108,18 @@ Plans:
 
 **Requirements:** AG-01, AG-02, AG-03, AG-04, AG-05
 
-**Plans:**
-1. Rewrite README — remove "starter kit" framing, add proper architecture description
-2. Create `.github/workflows/ci.yml` — Python 3.12 with pip install
-3. Create Wiki (4 pages: Home, Setup, Architecture, Config Reference)
-4. Add cross-repo links (org badge, sibling project links)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 05-00-PLAN.md — Manual checkpoint: initialize autogen wiki.git via GitHub web UI (AG-03 blocker)
+- [ ] 05-01-PLAN.md — Create .github/workflows/ci.yml (Python 3.12 / pytest on ubuntu-latest) (AG-02)
+- [ ] 05-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (AG-01, AG-04, AG-05)
+- [ ] 05-03-PLAN.md — Clone autogen.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (AG-03)
 
 **Success Criteria:**
 - README positions autogen as "enterprise multi-agent system" not "starter"
-- CI badge is green
-- Wiki has 4 pages
+- CI badge is green on main branch
+- Wiki has 4 pages with substantive content
 - README links to gsd-orchestrator and Promptimprover
 
 **Depends on:** Phase 1
