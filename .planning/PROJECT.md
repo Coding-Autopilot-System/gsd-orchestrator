@@ -73,13 +73,13 @@ A hiring manager should be able to spend 5 minutes on the GitHub org and immedia
 - [x] gsd-orchestrator has Mermaid architecture diagram in README — Validated in Phase 2: stateDiagram-v2 + flowchart LR
 - [x] gsd-orchestrator has GitHub Wiki (4+ pages) — Validated in Phase 3: Home, Setup Guide, Architecture, Configuration Reference live
 - [x] gsd-orchestrator has v1.0.0 release — Validated in Phase 3: feature-narrative release notes, not draft/pre-release
-- [ ] Promptimprover has updated README and GitHub Actions CI
-- [ ] Promptimprover has GitHub Wiki
-- [ ] autogen has updated README and GitHub Actions CI
-- [ ] autogen has GitHub Wiki
+- [x] Promptimprover has updated README and GitHub Actions CI — Validated in Phase 4: hero line, badges, Mermaid diagram, CI green
+- [x] Promptimprover has GitHub Wiki — Validated in Phase 4: Home, Setup Guide, Architecture, Configuration Reference live
+- [x] autogen has updated README and GitHub Actions CI — Validated in Phase 5: enterprise hero line, CI green (Python 3.12)
+- [x] autogen has GitHub Wiki — Validated in Phase 5: Home, Setup Guide, Architecture, Configuration Reference live
 - [ ] Personal OgeonX-Ai profile README links to org and highlights top projects
 - [x] gsd-orchestrator README has CI / .NET 10 / License badges — Validated in Phase 2
-- [ ] Promptimprover and autogen READMEs have CI/version badges
+- [x] Promptimprover and autogen READMEs have CI/version badges — Validated in Phases 4 and 5
 
 ### Out of Scope
 
@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-23 — Phase 3 complete (Wiki 4 pages, v1.0.0 release)*
+*Last updated: 2026-05-24 — Phase 5 complete (autogen: CI green, README enterprise, Wiki 4 pages)*
