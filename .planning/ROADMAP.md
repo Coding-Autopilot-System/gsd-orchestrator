@@ -111,10 +111,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 05-00-PLAN.md — Manual checkpoint: initialize autogen wiki.git via GitHub web UI (AG-03 blocker)
-- [ ] 05-01-PLAN.md — Create .github/workflows/ci.yml (Python 3.12 / pytest on ubuntu-latest) (AG-02)
-- [ ] 05-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (AG-01, AG-04, AG-05)
-- [ ] 05-03-PLAN.md — Clone autogen.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (AG-03)
+- [x] 05-00-PLAN.md — Manual checkpoint: initialize autogen wiki.git via GitHub web UI (AG-03 blocker) — 2026-05-24
+- [x] 05-01-PLAN.md — Create .github/workflows/ci.yml (Python 3.12 / pytest on ubuntu-latest) (AG-02) — 2026-05-24
+- [x] 05-02-PLAN.md — Rewrite README with hero line, badges, Mermaid architecture diagram, and cross-repo links (AG-01, AG-04, AG-05) — 2026-05-24
+- [x] 05-03-PLAN.md — Clone autogen.wiki.git and push 4 wiki pages: Home, Setup Guide, Architecture, Configuration Reference (AG-03) — 2026-05-24
 
 **Success Criteria:**
 - README positions autogen as "enterprise multi-agent system" not "starter"

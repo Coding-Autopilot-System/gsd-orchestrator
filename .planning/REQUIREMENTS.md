@@ -24,19 +24,19 @@
 
 ### Promptimprover (PI)
 
-- [ ] **PI-01**: README rewritten — remove internal language, add hero line, architecture section
-- [ ] **PI-02**: GitHub Actions CI workflow (TypeScript/Node build) with passing badge
-- [ ] **PI-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference
-- [ ] **PI-04**: README badges: CI, Node, License
-- [ ] **PI-05**: Cross-repo links to org and sibling projects
+- [x] **PI-01**: README rewritten — remove internal language, add hero line, architecture section — Phase 4 ✓
+- [x] **PI-02**: GitHub Actions CI workflow (TypeScript/Node build) with passing badge — Phase 4 ✓
+- [x] **PI-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference — Phase 4 ✓
+- [x] **PI-04**: README badges: CI, Node, License — Phase 4 ✓
+- [x] **PI-05**: Cross-repo links to org and sibling projects — Phase 4 ✓
 
 ### autogen (AG)
 
-- [ ] **AG-01**: README rewritten — remove "starter kit" framing, add enterprise positioning
-- [ ] **AG-02**: GitHub Actions CI workflow (Python build) with passing badge
-- [ ] **AG-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference
-- [ ] **AG-04**: README badges: CI, Python, License
-- [ ] **AG-05**: Cross-repo links to org and sibling projects
+- [x] **AG-01**: README rewritten — remove "starter kit" framing, add enterprise positioning — Phase 5 ✓
+- [x] **AG-02**: GitHub Actions CI workflow (Python build) with passing badge — Phase 5 ✓
+- [x] **AG-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference — Phase 5 ✓
+- [x] **AG-04**: README badges: CI, Python, License — Phase 5 ✓
+- [x] **AG-05**: Cross-repo links to org and sibling projects — Phase 5 ✓
 
 ### Portfolio Coherence (COH)
 
