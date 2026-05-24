@@ -133,10 +133,11 @@ Plans:
 
 **Requirements:** COH-01, COH-02, COH-03
 
-**Plans:**
-1. Create OgeonX-Ai personal profile README (GitHub profile repo)
-2. Add "Part of Coding-Autopilot-System" badge/link to all three READMEs
-3. Update org profile README with final system diagram linking all three repos
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Add Coding-Autopilot-System ecosystem line to gsd-orchestrator README (COH-02)
+- [ ] 06-02-PLAN.md — Rewrite OgeonX-Ai personal profile README + update org profile diagram (COH-01, COH-03)
 
 **Success Criteria:**
 - OgeonX-Ai GitHub profile shows portfolio work
@@ -152,11 +153,11 @@ Plans:
 
 | Requirement | Phase |
 |-------------|-------|
-| FOUND-01–05 | 1 |
+| FOUND-01--05 | 1 |
 | GSD-01, 02, 03, 09 | 2 |
 | GSD-04, 05, 06, 07, 08 | 3 |
-| PI-01–05 | 4 |
-| AG-01–05 | 5 |
-| COH-01–03 | 6 |
+| PI-01--05 | 4 |
+| AG-01--05 | 5 |
+| COH-01--03 | 6 |
 
 **All 23 requirements covered across 6 phases ✓**
