@@ -8,6 +8,9 @@ Autonomous GitHub agentic workflow system. Point it at a GitHub issue and it rea
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+Part of the [Coding-Autopilot-System](https://github.com/Coding-Autopilot-System) ecosystem:
+[Promptimprover](https://github.com/Coding-Autopilot-System/Promptimprover) | [autogen](https://github.com/Coding-Autopilot-System/autogen)
+
 ---
 
 ## How it works
