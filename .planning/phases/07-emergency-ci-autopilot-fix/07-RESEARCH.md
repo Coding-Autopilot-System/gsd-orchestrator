@@ -432,7 +432,7 @@ gh api repos/Coding-Autopilot-System/ci-autopilot/topics \
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the GitHub Pages site (`docs/index.html`) be updated as part of Level A?**
    - What we know: GitHub Pages is enabled at `https://coding-autopilot-system.github.io/ci-autopilot/` with a professional landing page (dark theme, branded)

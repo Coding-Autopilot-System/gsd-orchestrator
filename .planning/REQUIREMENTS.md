@@ -44,7 +44,37 @@
 - [ ] **COH-02**: All three repo READMEs include "Part of Coding-Autopilot-System" badge/link
 - [ ] **COH-03**: Org profile updated with system interaction diagram showing all three projects
 
-## v2 Requirements (Deferred)
+## v2 Requirements — Milestone 2.0 (Full Org Documentation)
+
+### ci-autopilot Emergency Fix (CIAP)
+
+- [ ] **CIAP-01**: Disable/fix runner-health.yml runaway cron (currently `*/15 * * * *` checking offline self-hosted runner)
+- [ ] **CIAP-02**: Bulk-close all 1,964+ open `runner-offline` issues via GitHub API
+- [ ] **CIAP-03**: ci-autopilot Level A docs — README rewrite (AI agent automation framing), CI badge, wiki 4 pages, GitHub topics, cross-links to org
+
+### CAS Secondary Repos (ACOR)
+
+- [ ] **ACOR-01**: autopilot-core Level A docs — README rewrite, CI badge, wiki 4 pages, topics, cross-links
+- [ ] **ACOR-02**: autopilot-demo Level A docs — README rewrite, CI badge, wiki 4 pages, topics, cross-links
+- [ ] **CSEC-01**: cloud-security-service-model documentation — README rewrite (framework/methodology framing), wiki 4 pages, topics
+
+### OgeonX-Ai Core Tech (TECH)
+
+- [ ] **TECH-01**: enterprise-ai-gateway AI engineer reframe — README hero line, architecture diagram, wiki 4 pages, CI badge, cross-links to CAS
+- [ ] **TECH-02**: android AI engineer reframe — scan codebase, README (Android + AI integration framing), wiki 4 pages, CI badge
+
+### OgeonX-Ai Portfolio Repos (PORT)
+
+- [ ] **PORT-01**: kim-ai-voice-demo AI engineer reframe — README rewrite (away from ElevenLabs demo framing), wiki 4 pages, topics
+- [ ] **PORT-02**: My-CV reframe — README as AI-powered career tool, wiki 4 pages, topics
+
+### Cross-Portfolio Coherence (COHER)
+
+- [ ] **COHER-01**: GitHub topics audit — all repos have 5-10 accurate, discoverable topics
+- [ ] **COHER-02**: Org pinned repos — Coding-Autopilot-System pins the 3 flagship repos (gsd-orchestrator, Promptimprover, autogen), ci-autopilot excluded
+- [ ] **COHER-03**: Issue templates — standardize `bug_report.md` and `feature_request.md` across CAS repos
+
+## v1 Deferred (still out of scope for v2)
 
 - Test suites for gsd-orchestrator, Promptimprover, autogen
 - GitHub Projects board showing roadmap
@@ -68,3 +98,8 @@
 | PI-01–05 | Phase 4 |
 | AG-01–05 | Phase 5 |
 | COH-01–03 | Phase 6 |
+| CIAP-01–03 | Phase 7 |
+| ACOR-01–02, CSEC-01 | Phase 8 |
+| TECH-01–02 | Phase 9 |
+| PORT-01–02 | Phase 10 |
+| COHER-01–03 | Phase 11 |
