@@ -149,7 +149,7 @@ Plans:
 
 ---
 
-## Coverage Check
+## Coverage Check (Milestone 1.0)
 
 | Requirement | Phase |
 |-------------|-------|
@@ -161,3 +161,140 @@ Plans:
 | COH-01--03 | 6 |
 
 **All 23 requirements covered across 6 phases ✓**
+
+---
+
+# Milestone 2.0 — Full Org Documentation
+
+**Goal:** Every public repo in Coding-Autopilot-System and OgeonX-Ai meets Level A documentation standard (README rewrite + wiki 4 pages + CI badge + release + cross-links). All repos tell one coherent AI engineer story.
+
+**Repos in scope:**
+- CAS: ci-autopilot, autopilot-core, autopilot-demo, cloud-security-service-model
+- OgeonX-Ai: enterprise-ai-gateway, android, kim-ai-voice-demo, My-CV
+
+---
+
+## Phase 7 — EMERGENCY: Fix ci-autopilot + Level A Docs
+
+**Goal:** Stop the runaway `runner-health.yml` workflow from generating issues. Bulk-close 1,964+ existing issues. Then bring ci-autopilot to Level A documentation standard.
+
+**Requirements:** CIAP-01, CIAP-02, CIAP-03
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07-00-PLAN.md — Manual checkpoint: initialize ci-autopilot wiki.git via GitHub web UI (CIAP-03 blocker) [Wave 0]
+- [ ] 07-01-PLAN.md — Disable runner-health.yml cron + bulk-close all `runner-offline` issues via GitHub API (CIAP-01, CIAP-02) [Wave 1]
+- [ ] 07-02-PLAN.md — ci-autopilot Level A: README rewrite, CI badge, wiki 4 pages, GitHub topics, cross-links (CIAP-03) [Wave 2]
+
+**Success Criteria:**
+- `runner-health.yml` no longer creates new issues (cron disabled)
+- All 1,964 open `runner-offline` issues closed
+- ci-autopilot README leads with "AI-powered CI autopilot" not Azure/DevOps noise
+- Wiki has 4 pages, CI badge green, 8 topics set
+
+**Depends on:** Phase 6 (Phase 1.0 complete)
+**Estimated effort:** Medium (emergency triage + Level A docs)
+
+---
+
+## Phase 8 — CAS Secondary Repos Level A
+
+**Goal:** autopilot-core, autopilot-demo, and cloud-security-service-model reach Level A documentation.
+
+**Requirements:** ACOR-01, ACOR-02, CSEC-01
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — autopilot-core Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-01) [Wave 1]
+- [ ] 08-02-PLAN.md — autopilot-demo Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-02) [Wave 1]
+- [ ] 08-03-PLAN.md — cloud-security-service-model documentation: README (framework framing), wiki 4 pages, topics (CSEC-01) [Wave 2]
+
+**Success Criteria:**
+- All three repos have enterprise-grade README with hero line and architecture section
+- autopilot-core and autopilot-demo have passing CI badge
+- cloud-security-service-model README explains the framework/methodology clearly
+
+**Depends on:** Phase 7
+**Estimated effort:** Medium
+
+---
+
+## Phase 9 — OgeonX-Ai Core Tech AI Reframe + Level A
+
+**Goal:** enterprise-ai-gateway and android are repositioned as AI engineering work with full Level A docs.
+
+**Requirements:** TECH-01, TECH-02
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — enterprise-ai-gateway AI reframe: README hero line, architecture diagram, wiki 4 pages, CI badge, cross-links to CAS (TECH-01) [Wave 1]
+- [ ] 09-02-PLAN.md — android AI reframe: scan codebase → README (Android + AI framing), wiki 4 pages, CI badge (TECH-02) [Wave 1]
+
+**Success Criteria:**
+- enterprise-ai-gateway README positions it as AI infrastructure, not generic gateway
+- android README explains its purpose in AI engineer context with accurate tech description
+- Both repos have wiki and CI badge
+
+**Depends on:** Phase 6 (personal profile already updated)
+**Estimated effort:** Medium (android requires codebase scan)
+
+---
+
+## Phase 10 — OgeonX-Ai Portfolio Repos AI Reframe + Level A
+
+**Goal:** kim-ai-voice-demo and My-CV repositioned from demos to portfolio artifacts with Level A docs.
+
+**Requirements:** PORT-01, PORT-02
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — kim-ai-voice-demo AI reframe: README (away from ElevenLabs demo framing → AI voice engineering), wiki 4 pages, topics (PORT-01) [Wave 1]
+- [ ] 10-02-PLAN.md — My-CV reframe: README as AI-powered career tool, wiki 4 pages, topics (PORT-02) [Wave 1]
+
+**Success Criteria:**
+- kim-ai-voice-demo README leads with AI voice engineering, not ElevenLabs product demo
+- My-CV README explains AI toolchain used to build and maintain CV
+- Both repos have 4 wiki pages
+
+**Depends on:** Phase 9
+**Estimated effort:** Small-medium
+
+---
+
+## Phase 11 — Cross-Portfolio Final Coherence
+
+**Goal:** Topics, pinned repos, and issue templates are consistent and discoverable across all orgs.
+
+**Requirements:** COHER-01, COHER-02, COHER-03
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Topics audit: all repos get 5-10 accurate topics; org pinned repos set to gsd-orchestrator, Promptimprover, autogen (COHER-01, COHER-02) [Wave 1]
+- [ ] 11-02-PLAN.md — Issue templates: standardize bug_report.md and feature_request.md across all CAS repos (COHER-03) [Wave 2]
+
+**Success Criteria:**
+- All repos discoverable by relevant GitHub topic searches
+- Coding-Autopilot-System org page pins flagship 3 repos
+- CAS repos have consistent issue templates
+
+**Depends on:** Phases 7-10 (all repos polished)
+**Estimated effort:** Small
+
+---
+
+## Coverage Check (Milestone 2.0)
+
+| Requirement | Phase |
+|-------------|-------|
+| CIAP-01–03 | 7 |
+| ACOR-01–02, CSEC-01 | 8 |
+| TECH-01–02 | 9 |
+| PORT-01–02 | 10 |
+| COHER-01–03 | 11 |
+
+**All 11 v2 requirements covered across 5 phases ✓**
