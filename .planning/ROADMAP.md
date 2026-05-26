@@ -183,9 +183,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-00-PLAN.md — Manual checkpoint: initialize ci-autopilot wiki.git via GitHub web UI (CIAP-03 blocker) [Wave 0]
-- [ ] 07-01-PLAN.md — Disable runner-health.yml cron + bulk-close all `runner-offline` issues via GitHub API (CIAP-01, CIAP-02) [Wave 1]
-- [ ] 07-02-PLAN.md — ci-autopilot Level A: README rewrite, CI badge, wiki 4 pages, GitHub topics, cross-links (CIAP-03) [Wave 2]
+- [x] 07-00-PLAN.md — Manual checkpoint: initialize ci-autopilot wiki.git via GitHub web UI (CIAP-03 blocker) [Wave 0] — 2026-05-26
+- [x] 07-01-PLAN.md — Disable runner-health.yml cron + bulk-close all `runner-offline` issues via GitHub API (CIAP-01, CIAP-02) [Wave 1] — 2026-05-26
+- [x] 07-02-PLAN.md — ci-autopilot Level A: README rewrite, CI badge, wiki 4 pages, GitHub topics, cross-links (CIAP-03) [Wave 2] — 2026-05-26
 
 **Success Criteria:**
 - `runner-health.yml` no longer creates new issues (cron disabled)
