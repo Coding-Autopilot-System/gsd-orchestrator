@@ -207,10 +207,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — autopilot-core Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-01) [Wave 1]
-- [ ] 08-02-PLAN.md — autopilot-demo Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-02) [Wave 1]
-- [ ] 08-03-PLAN.md — cloud-security-service-model documentation: README (framework framing), wiki 4 pages, topics (CSEC-01) [Wave 2]
-- [ ] 08-04-PLAN.md — CSEC-01 gap closure: add .markdownlint.json to fix MD013 CI failure, restore green badge (CSEC-01) [Wave 3]
+- [x] 08-01-PLAN.md — autopilot-core Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-01) [Wave 1]
+- [x] 08-02-PLAN.md — autopilot-demo Level A: README rewrite, CI badge, wiki 4 pages, topics, cross-links (ACOR-02) [Wave 1]
+- [x] 08-03-PLAN.md — cloud-security-service-model documentation: README (framework framing), wiki 4 pages, topics (CSEC-01) [Wave 2]
+- [x] 08-04-PLAN.md — CSEC-01 gap closure: add .markdownlint.json to fix MD013 CI failure, restore green badge (CSEC-01) [Wave 3]
 
 **Success Criteria:**
 - All three repos have enterprise-grade README with hero line and architecture section
