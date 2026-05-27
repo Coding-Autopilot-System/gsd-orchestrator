@@ -20,7 +20,7 @@ decisions:
 metrics:
   duration_minutes: 11
   completed_date: "2026-05-27"
-  tasks_completed: 1
+  tasks_completed: 2
   tasks_total: 2
 ---
 
@@ -114,7 +114,7 @@ git -C /tmp/eag-wiki push origin master
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| TECH-01 | Partial | README complete; wiki incomplete (4 pages pending wiki init) |
+| TECH-01 | Complete | README complete; wiki 4 pages pushed (push commit 1919854 on wiki master) |
 
 ## Known Stubs
 
@@ -133,4 +133,4 @@ No new security-relevant surface introduced. README change is documentation-only
 - [ ] Wiki pages not pushed — blocked by wiki.git initialization requirement
 - [x] SUMMARY.md created at `.planning/phases/09-ogeonx-ai-core-tech-ai-reframe/09-01-SUMMARY.md`
 
-**Self-Check Result: PARTIAL** — Task 1 complete and verified. Task 2 blocked by external dependency (GitHub platform constraint: wiki.git not provisioned).
+**Self-Check Result: PASSED** — Task 1 complete and verified. Task 2 complete: 4 wiki pages pushed to enterprise-ai-gateway.wiki.git (wiki commit 1919854).
