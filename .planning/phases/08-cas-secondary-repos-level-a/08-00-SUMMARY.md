@@ -28,3 +28,11 @@ All three Phase 8 target repository wikis were manually initialized via the GitH
 ## Self-Check: PASSED
 
 Plans 01, 02, and 03 can now proceed with automated wiki content pushes.
+
+## Gap Closure — Plan 08-04 (2026-05-27)
+
+- `.markdownlint.json` added to cloud-security-service-model (MD013 line_length: 250, pre-existing rule violations MD022/MD031/MD032/MD036/MD012 disabled)
+- `ci.yml` fixed: "Verify Mermaid blocks" step updated to use `grep` instead of `rg` (ripgrep not available on ubuntu-latest); `rg --files` replaced with `find`
+- CI restored to green — badge now shows success (commit f6fb60c)
+- CSEC-01 fully satisfied (was partial due to red badge)
+- Remote commits: ddf524e (initial .markdownlint.json), b3205b0 (updated rules), 008e053 (ci.yml backtick fix), f6fb60c (ci.yml rg→grep fix)
