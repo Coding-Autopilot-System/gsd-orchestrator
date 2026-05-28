@@ -65,8 +65,8 @@
 
 ### OgeonX-Ai Portfolio Repos (PORT)
 
-- [ ] **PORT-01**: kim-ai-voice-demo AI engineer reframe — README rewrite (away from ElevenLabs demo framing), wiki 4 pages, topics
-- [ ] **PORT-02**: My-CV reframe — README as AI-powered career tool, wiki 4 pages, topics
+- [x] **PORT-01**: kim-ai-voice-demo AI engineer reframe — README rewrite (away from ElevenLabs demo framing), wiki 4 pages, topics — Phase 10 ✓
+- [x] **PORT-02**: My-CV reframe — README as AI-powered career tool, wiki 4 pages, topics — Phase 10 ✓
 
 ### Cross-Portfolio Coherence (COHER)
 

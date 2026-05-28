@@ -253,9 +253,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 10-00-PLAN.md — Manual checkpoint: initialize kim-ai-voice-demo and My-CV wiki.git via GitHub web UI (PORT-01, PORT-02 blocker) [Wave 0]
-- [ ] 10-01-PLAN.md — kim-ai-voice-demo full Level A: CI workflow (Node.js), README rewrite (AI voice engineering framing), 4 wiki pages, 8 topics (PORT-01) [Wave 1]
-- [ ] 10-02-PLAN.md — My-CV full Level A: MIT LICENSE, CI workflow (HTML validation), README rewrite (AI-powered career tool), 4 wiki pages, 7 topics (PORT-02) [Wave 1]
+- [x] 10-00-PLAN.md — Manual checkpoint: initialize kim-ai-voice-demo and My-CV wiki.git via GitHub web UI (PORT-01, PORT-02 blocker) [Wave 0] — 2026-05-28
+- [x] 10-01-PLAN.md — kim-ai-voice-demo full Level A: CI workflow (Node.js), README rewrite (AI voice engineering framing), 4 wiki pages, 8 topics (PORT-01) [Wave 1] — 2026-05-28
+- [x] 10-02-PLAN.md — My-CV full Level A: MIT LICENSE, CI workflow (HTML validation), README rewrite (AI-powered career tool), 4 wiki pages, 7 topics (PORT-02) [Wave 1] — 2026-05-28
 
 **Success Criteria:**
 - kim-ai-voice-demo README leads with AI voice engineering, not ElevenLabs product demo
