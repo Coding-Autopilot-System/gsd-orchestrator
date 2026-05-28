@@ -231,8 +231,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — enterprise-ai-gateway AI reframe: README hero line, architecture diagram, wiki 4 pages, CI badge, cross-links to CAS (TECH-01) [Wave 1]
-- [ ] 09-02-PLAN.md — android AI reframe: scan codebase → README (Android + AI framing), wiki 4 pages, CI badge (TECH-02) [Wave 1]
+- [x] 09-01-PLAN.md — enterprise-ai-gateway AI reframe: README hero line, architecture diagram, wiki 4 pages, CI badge, cross-links to CAS (TECH-01) [Wave 1]
+- [x] 09-02-PLAN.md — android AI reframe: scan codebase, README (Android + AI framing), wiki 4 pages, CI badge (TECH-02) [Wave 1]
 
 **Success Criteria:**
 - enterprise-ai-gateway README positions it as AI infrastructure, not generic gateway
@@ -250,16 +250,19 @@ Plans:
 
 **Requirements:** PORT-01, PORT-02
 
-**Plans:** 2 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — kim-ai-voice-demo AI reframe: README (away from ElevenLabs demo framing → AI voice engineering), wiki 4 pages, topics (PORT-01) [Wave 1]
-- [ ] 10-02-PLAN.md — My-CV reframe: README as AI-powered career tool, wiki 4 pages, topics (PORT-02) [Wave 1]
+- [ ] 10-00-PLAN.md — Manual checkpoint: initialize kim-ai-voice-demo and My-CV wiki.git via GitHub web UI (PORT-01, PORT-02 blocker) [Wave 0]
+- [ ] 10-01-PLAN.md — kim-ai-voice-demo full Level A: CI workflow (Node.js), README rewrite (AI voice engineering framing), 4 wiki pages, 8 topics (PORT-01) [Wave 1]
+- [ ] 10-02-PLAN.md — My-CV full Level A: MIT LICENSE, CI workflow (HTML validation), README rewrite (AI-powered career tool), 4 wiki pages, 7 topics (PORT-02) [Wave 1]
 
 **Success Criteria:**
 - kim-ai-voice-demo README leads with AI voice engineering, not ElevenLabs product demo
 - My-CV README explains AI toolchain used to build and maintain CV
 - Both repos have 4 wiki pages
+- Both repos have CI badges (green)
+- Both repos have GitHub topics set
 
 **Depends on:** Phase 9
 **Estimated effort:** Small-medium
