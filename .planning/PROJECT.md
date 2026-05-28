@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-27 — Phase 8 complete (autopilot-core, autopilot-demo, cloud-security-service-model: Level A docs, CI green, ACOR-01/ACOR-02/CSEC-01 satisfied)*
+*Last updated: 2026-05-28 — Phase 10 complete (kim-ai-voice-demo + My-CV: CI green, README rewritten, 4 wiki pages each, topics set — PORT-01/PORT-02 satisfied)*
