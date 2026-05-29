@@ -40,13 +40,12 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 // ── Logging ──────────────────────────────────────────────────────────────
-builder.Host.UseSerilog((context, loggerConfig) =>
-    loggerConfig
-        .MinimumLevel.Information()
-        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
-        .Enrich.FromLogContext()
-        .WriteTo.Console(new CompactJsonFormatter()));
+builder.Services.AddSerilog(lc =>
+    lc.MinimumLevel.Information()
+      .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+      .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+      .Enrich.FromLogContext()
+      .WriteTo.Console(new CompactJsonFormatter()));
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<GitHubPatProvider>();
@@ -57,8 +56,8 @@ var binaryPath = builder.Configuration["GSD_MCP_BINARY"] ?? FindMcpBinary();
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var pat = sp.GetRequiredService<GitHubPatProvider>();
-    var logger = sp.GetRequiredService<ILogger<McpStdioClient>>();
-    return new McpStdioClient(pat.Token, binaryPath, logger);
+    var mcpLogger = sp.GetRequiredService<ILogger<McpStdioClient>>();
+    return new McpStdioClient(pat.Token, binaryPath, mcpLogger);
 });
 builder.Services.AddSingleton<McpToolDispatcher>();
 
@@ -87,9 +86,9 @@ builder.Services.AddSingleton<IChatClient>(sp =>
 // ── Checkpointing ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<ICheckpointStore>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger<FileCheckpointStore>>();
+    var cpLogger = sp.GetRequiredService<ILogger<FileCheckpointStore>>();
     var repoRoot = Directory.GetCurrentDirectory();
-    return new FileCheckpointStore(repoRoot, logger);
+    return new FileCheckpointStore(repoRoot, cpLogger);
 });
 
 // ── Workflow states ──────────────────────────────────────────────────────────────────
@@ -148,7 +147,7 @@ await (mcp as IAsyncDisposable)!.DisposeAsync();
 static async Task RunWatchModeAsync(
     GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
     string owner, string repo,
-    ILogger logger, CancellationToken ct)
+    ILogger<Program> logger, CancellationToken ct)
 {
     var pollInterval = TimeSpan.FromMinutes(5);
     var processedIssues = new HashSet<int>();
