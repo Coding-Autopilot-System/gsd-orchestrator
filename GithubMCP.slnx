@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/GsdOrchestrator/GsdOrchestrator.csproj" />
+    <Project Path="src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj" />
   </Folder>
 </Solution>
