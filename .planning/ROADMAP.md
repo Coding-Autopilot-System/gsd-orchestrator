@@ -319,7 +319,12 @@ Plans:
 
 **Requirements:** ROB-01, ROB-02, ROB-03
 
-**Plans:** TBD (planning phase)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Serilog structured logging: add packages to csproj, register UseSerilog in Program.cs, instrument GsdStateMachine (ROB-01) [Wave 1]
+- [ ] 12-02-PLAN.md — Polly circuit breaker: extend AddResiliencePipeline with AddCircuitBreaker, catch BrokenCircuitException in McpToolDispatcher (ROB-03) [Wave 1]
+- [ ] 12-03-PLAN.md — xUnit test project: create GsdOrchestrator.Tests, write 7 GsdStateMachine unit tests with NSubstitute mocks (ROB-02) [Wave 2]
 
 **Success Criteria:**
 - `dotnet build` still green
