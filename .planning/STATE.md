@@ -2,34 +2,52 @@
 gsd_state_version: 1.0
 milestone: v3.0.0
 milestone_name: gsd-orchestrator Feature Expansion
-status: planning
-last_updated: "2026-05-29T00:00:00.000Z"
+status: in-progress
+last_updated: "2026-05-29T23:24:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 13
+  completed_plans: 1
+  percent: 8
 ---
 
 # Project State — gsd-orchestrator Feature Expansion (Milestone 3.0)
 
 ## Current Status
 
-**Active Phase:** Phase 12 — Robustness Foundation (planning)
-**Last Completed:** Phase 11 — Cross-Portfolio Final Coherence (2026-05-28) [Milestone 2.0]
+**Active Phase:** Phase 12 — Robustness Foundation (in-progress)
+**Current Plan:** 12-01 COMPLETE — next: 12-02 (xUnit tests)
+**Last Completed:** Phase 12 Plan 01 — Serilog structured logging (2026-05-29)
 **Milestone:** 3.0 — gsd-orchestrator Feature Expansion
-**Last Updated:** 2026-05-29
+**Last Updated:** 2026-05-29T23:24:00Z
 
 ## Milestone 3.0 Phase Progress
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 12 | Robustness Foundation | planning |
+| 12 | Robustness Foundation | in-progress (1/3 plans done) |
 | 13 | Smarter Issue Triage | not started |
 | 14 | Autonomous Test Generation | not started |
 | 15 | PR Review Loop | not started |
 | 16 | Multi-Repo Support | not started |
+
+## Phase 12 Plans
+
+| Plan | Objective | Wave | Autonomous |
+|------|-----------|------|------------|
+| 12-01 | Serilog structured logging in GsdStateMachine + Program.cs | 1 | yes |
+| 12-02 | xUnit + NSubstitute test project with >= 20% coverage | 1 | yes |
+| 12-03 | Polly v8 circuit breaker for MCP tool calls | 1 | yes |
+
+## Phase 12 Results (in-progress)
+
+- **12-01 COMPLETE (2026-05-29):** Serilog structured JSON logging added — AddSerilog + CompactJsonFormatter in Program.cs; GsdStateMachine.ExecuteLoopAsync emits WorkflowId, StateName, IssueNumber, DurationMs on all state transitions; CI green (run 26667165640). ROB-01 satisfied.
+
+## Key Decisions
+
+- **D-AddSerilog:** Used `builder.Services.AddSerilog()` (IServiceCollection API) not `builder.Host.UseSerilog()` (IHostBuilder API) — HostApplicationBuilder does not expose .Host property
+- **D-ILogger-generic:** Used `ILogger<T>` generic form throughout to avoid Serilog.ILogger vs MEL.ILogger ambiguity without using alias
 
 ## Completed Work (pre-planning)
 

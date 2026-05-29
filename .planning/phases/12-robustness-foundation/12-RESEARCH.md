@@ -523,14 +523,14 @@ builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineB
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **McpToolDispatcher testability without an interface**
+1. **McpToolDispatcher testability without an interface** (RESOLVED)
    - What we know: `GsdStateMachine` takes `McpToolDispatcher` as a concrete constructor parameter, not via interface.
    - What's unclear: Whether the planner should introduce `IMcpToolDispatcher` as a prerequisite, or use the pass-through Polly registry pattern.
    - Recommendation: Use the pass-through registry pattern (no new interface) per D-06/D-11 scope constraints. Document in plan that `IMcpToolDispatcher` is deferred to Phase 13.
 
-2. **Coverage target achievability on McpStdioClient**
+2. **Coverage target achievability on McpStdioClient** (RESOLVED)
    - What we know: All public methods in `McpStdioClient` spawn an actual process (`InitializeAsync`) or depend on one being running.
    - What's unclear: Whether 20% combined coverage on `GsdStateMachine + McpStdioClient` is achievable by testing `GsdStateMachine` alone.
    - Recommendation: Calculate coverage on `GsdStateMachine` only first. With 7 test scenarios covering the main dispatch loop (~60 LOC), combined coverage should exceed 20% on the two-file target surface. The planner should note this in the plan.
