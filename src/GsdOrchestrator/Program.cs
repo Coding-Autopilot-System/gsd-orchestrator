@@ -9,11 +9,13 @@ using GsdOrchestrator.Workflows.States;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Serilog;
+using Serilog.Formatting.Compact;
 
-// ── Load .env before anything else ───────────────────────────────────────────
+// ── Load .env before anything else ─────────────────────────────────────────────
 DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4));
 
-// ── Simple args parsing ───────────────────────────────────────────────────────
+// ── Simple args parsing ──────────────────────────────────────────────────
 int? issueNumber = null;
 string? resumeId = null;
 bool watchMode = false;
@@ -37,14 +39,19 @@ if (issueNumber is null && resumeId is null && !watchMode)
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
-// ── Logging ───────────────────────────────────────────────────────────────────
-builder.Logging.AddSimpleConsole(o => o.IncludeScopes = false);
-builder.Services.AddLogging(lb => lb.AddFilter("Microsoft", LogLevel.Warning));
+// ── Logging ──────────────────────────────────────────────────────────────
+builder.Host.UseSerilog((context, loggerConfig) =>
+    loggerConfig
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(new CompactJsonFormatter()));
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<GitHubPatProvider>();
 
-// ── MCP Client ───────────────────────────────────────────────────────────────
+// ── MCP Client ──────────────────────────────────────────────────────────────────
 var binaryPath = builder.Configuration["GSD_MCP_BINARY"] ?? FindMcpBinary();
 
 builder.Services.AddSingleton<IMcpClient>(sp =>
@@ -55,7 +62,7 @@ builder.Services.AddSingleton<IMcpClient>(sp =>
 });
 builder.Services.AddSingleton<McpToolDispatcher>();
 
-// ── Polly resilience pipeline ─────────────────────────────────────────────────
+// ── Polly resilience pipeline ────────────────────────────────────────────────────────────
 builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineBuilder
     .AddRetry(new Polly.Retry.RetryStrategyOptions
     {
@@ -68,7 +75,7 @@ builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineB
                 : ValueTask.FromResult(false)
     }));
 
-// ── LLM Client (Anthropic Claude via Anthropic.SDK) ──────────────────────────
+// ── LLM Client (Anthropic Claude via Anthropic.SDK) ────────────────────────────
 builder.Services.AddSingleton<IChatClient>(sp =>
 {
     var key = builder.Configuration["ANTHROPIC_API_KEY"]
@@ -77,7 +84,7 @@ builder.Services.AddSingleton<IChatClient>(sp =>
     return (IChatClient)anthropic.Messages;
 });
 
-// ── Checkpointing ─────────────────────────────────────────────────────────────
+// ── Checkpointing ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<ICheckpointStore>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<FileCheckpointStore>>();
@@ -85,7 +92,7 @@ builder.Services.AddSingleton<ICheckpointStore>(sp =>
     return new FileCheckpointStore(repoRoot, logger);
 });
 
-// ── Workflow states ───────────────────────────────────────────────────────────
+// ── Workflow states ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IWorkflowState, IdleState>();
 builder.Services.AddSingleton<IWorkflowState, AnalyzingState>();
 builder.Services.AddSingleton<IWorkflowState, BranchingState>();
@@ -100,7 +107,7 @@ builder.Services.AddSingleton<GsdStateMachine>();
 
 var host = builder.Build();
 
-// ── Run ───────────────────────────────────────────────────────────────────────
+// ── Run ───────────────────────────────────────────────────────────────────────────
 var sm = host.Services.GetRequiredService<GsdStateMachine>();
 var mcp = host.Services.GetRequiredService<IMcpClient>();
 var config = host.Services.GetRequiredService<IConfiguration>();
@@ -137,7 +144,7 @@ else
 
 await (mcp as IAsyncDisposable)!.DisposeAsync();
 
-// ── Watch mode ────────────────────────────────────────────────────────────────
+// ── Watch mode ──────────────────────────────────────────────────────────────────
 static async Task RunWatchModeAsync(
     GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
     string owner, string repo,
@@ -208,7 +215,7 @@ static void PrintResult(GsdWorkflowContext result)
     }
 }
 
-// ── Binary discovery ──────────────────────────────────────────────────────────
+// ── Binary discovery ──────────────────────────────────────────────────────────────
 static string FindMcpBinary()
 {
     var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
