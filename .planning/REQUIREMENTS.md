@@ -70,9 +70,43 @@
 
 ### Cross-Portfolio Coherence (COHER)
 
-- [ ] **COHER-01**: GitHub topics audit — all repos have 5-10 accurate, discoverable topics
-- [ ] **COHER-02**: Org pinned repos — Coding-Autopilot-System pins the 3 flagship repos (gsd-orchestrator, Promptimprover, autogen), ci-autopilot excluded
-- [ ] **COHER-03**: Issue templates — standardize `bug_report.md` and `feature_request.md` across CAS repos
+- [x] **COHER-01**: GitHub topics audit — all repos have 5-10 accurate, discoverable topics — Phase 11 ✓
+- [x] **COHER-02**: Org pinned repos — manual instructions delivered (no programmatic API; org owner action required) — Phase 11 ✓
+- [x] **COHER-03**: Issue templates — `bug_report.md` and `feature_request.md` in gsd-orchestrator, Promptimprover, autogen — Phase 11 ✓
+
+## v3 Requirements — Milestone 3.0 (gsd-orchestrator Feature Expansion)
+
+### Robustness Foundation (ROB)
+
+- [ ] **ROB-01**: Serilog structured logging integrated — all state transitions, errors, and Claude calls emit structured log events
+- [ ] **ROB-02**: xUnit test project added with >= 20% coverage on GsdStateMachine and McpStdioClient
+- [ ] **ROB-03**: Polly circuit breaker added for MCP tool calls (complements existing retry policy)
+
+### Smarter Issue Triage (TRIAGE)
+
+- [ ] **TRIAGE-01**: `TriagingState` implemented — classifies issue via Claude (actionable / needs-info / duplicate / out-of-scope)
+- [ ] **TRIAGE-02**: Duplicate detection — checks open issues and PRs for similar titles before proceeding
+- [ ] **TRIAGE-03**: `--triage` operating mode — runs triage only, posts classification comment, no code changes
+- [ ] **TRIAGE-04**: Skip logic — issues classified as out-of-scope or duplicate are closed/labelled with comment, workflow exits cleanly
+
+### Autonomous Test Generation (TESTGEN)
+
+- [ ] **TESTGEN-01**: `TestGeneratingState` implemented — Claude generates xUnit tests for files changed in EditingState
+- [ ] **TESTGEN-02**: Generated tests committed to feature branch alongside code changes
+- [ ] **TESTGEN-03**: `ValidatingState` enhanced — checks test file compilation (not runtime pass/fail)
+
+### PR Review Loop (REV)
+
+- [ ] **REV-01**: `--pr <N>` operating mode — triggers PR review workflow on a specific PR number
+- [ ] **REV-02**: `ReviewingState` enhanced — reads PR diff, Claude produces structured review (issues list with file/line/severity/message)
+- [ ] **REV-03**: Review comments posted as inline PR comments via GitHub MCP; approve or request-changes action submitted
+
+### Multi-Repo Support (MULTI)
+
+- [ ] **MULTI-01**: `GSD_REPOS` environment variable (JSON array of `{owner, repo}` objects) — replaces single `GSD_GITHUB_OWNER`/`GSD_GITHUB_REPO`
+- [ ] **MULTI-02**: `--watch` mode iterates across all configured repos in sequence
+- [ ] **MULTI-03**: Checkpointing scoped per repo (`checkpoints/{owner}_{repo}/`)
+- [ ] **MULTI-04**: Configurable inter-repo delay (`GSD_REPO_DELAY_SECONDS`) to avoid API rate limits
 
 ## v1 Deferred (still out of scope for v2)
 

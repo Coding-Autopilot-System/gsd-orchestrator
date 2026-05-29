@@ -278,8 +278,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Topics audit: all repos get 5-10 accurate topics; org pinned repos set to gsd-orchestrator, Promptimprover, autogen (COHER-01, COHER-02) [Wave 1]
-- [ ] 11-02-PLAN.md — Issue templates: standardize bug_report.md and feature_request.md across all CAS repos (COHER-03) [Wave 2]
+- [x] 11-01-PLAN.md — Topics audit: all repos get 5-10 accurate topics; org pinned repos set to gsd-orchestrator, Promptimprover, autogen (COHER-01, COHER-02) [Wave 1] — 2026-05-28
+- [x] 11-02-PLAN.md — Issue templates: standardize bug_report.md and feature_request.md across all CAS repos (COHER-03) [Wave 2] — 2026-05-28
 
 **Success Criteria:**
 - All repos discoverable by relevant GitHub topic searches
@@ -302,3 +302,118 @@ Plans:
 | COHER-01–03 | 11 |
 
 **All 11 v2 requirements covered across 5 phases ✓**
+
+---
+
+# Milestone 3.0 — gsd-orchestrator Feature Expansion
+
+**Goal:** Extend gsd-orchestrator from a single-repo issue-to-PR automator into a multi-repo, triage-aware, test-generating autonomous engineering platform.
+
+**Repo:** Coding-Autopilot-System/gsd-orchestrator (C#/.NET 10)
+
+---
+
+## Phase 12 — Robustness Foundation
+
+**Goal:** Structured logging, unit test scaffold, and circuit breaker. This phase unlocks all subsequent phases by ensuring the codebase is instrumented, partially tested, and resilient before new states are added.
+
+**Requirements:** ROB-01, ROB-02, ROB-03
+
+**Plans:** TBD (planning phase)
+
+**Success Criteria:**
+- `dotnet build` still green
+- Serilog emits JSON-structured logs for every state transition
+- xUnit project exists with >= 20% coverage on state machine and MCP client
+- Circuit breaker prevents cascading MCP failures
+
+**Depends on:** Nothing (brownfield — codebase exists)
+**Estimated effort:** Medium
+
+---
+
+## Phase 13 — Smarter Issue Triage
+
+**Goal:** Issues are classified before the orchestrator commits to full planning and editing.
+
+**Requirements:** TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04
+
+**Plans:** TBD
+
+**Success Criteria:**
+- `TriagingState` inserted between `IdleState` and `AnalyzingState`
+- `--triage` mode exits after classification with a comment posted to the issue
+- Duplicate issues detected and skipped with a comment
+- Out-of-scope issues closed/labelled, workflow exits cleanly
+
+**Depends on:** Phase 12 (logging in place)
+**Estimated effort:** Medium
+
+---
+
+## Phase 14 — Autonomous Test Generation
+
+**Goal:** Code changes are paired with generated tests, committed to the same branch.
+
+**Requirements:** TESTGEN-01, TESTGEN-02, TESTGEN-03
+
+**Plans:** TBD
+
+**Success Criteria:**
+- `TestGeneratingState` executes after `EditingState`
+- Tests file(s) committed alongside code changes on the feature branch
+- `ValidatingState` checks test compilation succeeds
+
+**Depends on:** Phase 12 (logging), Phase 13 (triage reduces noise before test gen)
+**Estimated effort:** Medium-large (Claude prompt engineering for test generation)
+
+---
+
+## Phase 15 — PR Review Loop
+
+**Goal:** Orchestrator can review open PRs and post structured inline review comments.
+
+**Requirements:** REV-01, REV-02, REV-03
+
+**Plans:** TBD
+
+**Success Criteria:**
+- `--pr <N>` mode reads diff, invokes Claude, posts inline comments with severity
+- Approve or request-changes submitted based on Claude's assessment
+- Existing `--issue` flow unaffected
+
+**Depends on:** Phase 12 (logging)
+**Estimated effort:** Medium (new operating mode, GitHub PR review API)
+
+---
+
+## Phase 16 — Multi-Repo Support
+
+**Goal:** Watch mode and issue processing work across multiple repos without reconfiguration.
+
+**Requirements:** MULTI-01, MULTI-02, MULTI-03, MULTI-04
+
+**Plans:** TBD
+
+**Success Criteria:**
+- `GSD_REPOS` JSON array replaces single owner/repo env vars (backwards compatible)
+- `--watch` processes all configured repos in sequence with delay
+- Checkpoints scoped per repo — no cross-contamination
+- Rate limit delay configurable
+
+**Depends on:** Phase 12 (logging), Phase 13 (triage needed at scale)
+**Estimated effort:** Medium
+
+---
+
+## Coverage Check (Milestone 3.0)
+
+| Requirement | Phase |
+|-------------|-------|
+| ROB-01–03 | 12 |
+| TRIAGE-01–04 | 13 |
+| TESTGEN-01–03 | 14 |
+| REV-01–03 | 15 |
+| MULTI-01–04 | 16 |
+
+**13 v3 requirements across 5 phases**

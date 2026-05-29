@@ -1,4 +1,17 @@
-# Enterprise GitHub Portfolio
+# Enterprise GitHub Portfolio + gsd-orchestrator
+
+## Current Milestone: v3.0 — gsd-orchestrator Feature Expansion
+
+**Goal:** Extend gsd-orchestrator from a single-repo issue-to-PR automator into a multi-repo, triage-aware, test-generating autonomous engineering platform.
+
+**Target features:**
+- Robustness foundation (Serilog, xUnit, circuit breaker)
+- Smarter issue triage (TriagingState, --triage mode, duplicate detection)
+- Autonomous test generation (TestGeneratingState, xUnit tests on branch)
+- PR review loop (--pr mode, structured inline comments, approve/request-changes)
+- Multi-repo support (GSD_REPOS config, per-repo checkpointing)
+
+---
 
 ## What This Is
 
@@ -101,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-28 — Phase 10 complete (kim-ai-voice-demo + My-CV: CI green, README rewritten, 4 wiki pages each, topics set — PORT-01/PORT-02 satisfied)*
+*Last updated: 2026-05-29 — Milestone 3.0 started. Feature work on gsd-orchestrator: 5 phases (12-16), 13 requirements. Phase 12 (Robustness Foundation) is next.*
