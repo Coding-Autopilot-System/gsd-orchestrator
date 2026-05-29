@@ -119,16 +119,12 @@ public sealed class GsdStateMachine
         if (ctx.Issue is null) return;
         try
         {
-            var body = $"""                🤖 **GSD Orchestrator failed**
-
-                Last state: `{ctx.History.LastOrDefault()?.From}`
-                Reason: {ctx.FailureReason ?? "Unknown error"}
-
-                The workflow checkpoint is saved for debugging. Resume with:
-                ```
-                dotnet run -- --resume {ctx.WorkflowId}
-                ```
-                """;
+            var body = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"🤖 **GSD Orchestrator failed**\n\n"
+                + $"Last state: `{ctx.History.LastOrDefault()?.From}`\n"
+                + $"Reason: {ctx.FailureReason ?? "Unknown error"}\n\n"
+                + $"The workflow checkpoint is saved for debugging. Resume with:\n"
+                + $"```\ndotnet run -- --resume {ctx.WorkflowId}\n```");
 
             await _mcp.CallAsync("add_issue_comment", new System.Text.Json.Nodes.JsonObject
             {
