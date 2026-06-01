@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v3.0.0
 milestone_name: milestone
-current_plan: "12-02 COMPLETE — next: 12-03 (xUnit test project)"
+current_plan: "Phase 12 COMPLETE — next: Phase 13 (Smarter Issue Triage)"
 status: in-progress
-last_updated: "2026-06-01T08:09:51.243Z"
+last_updated: "2026-06-01T09:00:00.000Z"
 progress:
   total_phases: 12
   completed_phases: 12
@@ -17,17 +17,17 @@ progress:
 
 ## Current Status
 
-**Active Phase:** Phase 12 — Robustness Foundation (in-progress)
-**Current Plan:** 12-02 COMPLETE — next: 12-03 (xUnit test project)
-**Last Completed:** Phase 12 Plan 02 — Polly v8 circuit breaker for MCP tool calls (2026-05-30)
+**Active Phase:** Phase 13 — Smarter Issue Triage (not started)
+**Current Plan:** Phase 12 COMPLETE (2026-06-01) — next: Phase 13
+**Last Completed:** Phase 12 Plan 03 — xUnit test project with 7 GsdStateMachine tests (2026-06-01)
 **Milestone:** 3.0 — gsd-orchestrator Feature Expansion
-**Last Updated:** 2026-05-30T00:25:00Z
+**Last Updated:** 2026-06-01T09:00:00Z
 
 ## Milestone 3.0 Phase Progress
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 12 | Robustness Foundation | in-progress (2/3 plans done) |
+| 12 | Robustness Foundation | complete (2026-06-01) |
 | 13 | Smarter Issue Triage | not started |
 | 14 | Autonomous Test Generation | not started |
 | 15 | PR Review Loop | not started |
@@ -41,10 +41,11 @@ progress:
 | 12-02 | xUnit + NSubstitute test project with >= 20% coverage | 1 | yes |
 | 12-03 | Polly v8 circuit breaker for MCP tool calls | 1 | yes |
 
-## Phase 12 Results (in-progress)
+## Phase 12 Results (COMPLETE — 2026-06-01)
 
 - **12-01 COMPLETE (2026-05-29):** Serilog structured JSON logging added — AddSerilog + CompactJsonFormatter in Program.cs; GsdStateMachine.ExecuteLoopAsync emits WorkflowId, StateName, IssueNumber, DurationMs on all state transitions; CI green (run 26667165640). ROB-01 satisfied.
 - **12-02 COMPLETE (2026-05-30):** Polly v8 ratio-based circuit breaker added — AddCircuitBreaker (FailureRatio=1.0, MinimumThroughput=5, SamplingDuration=60s, BreakDuration=30s) registered before AddRetry in mcp-tools pipeline; BrokenCircuitException caught in McpToolDispatcher.CallAsync, rethrown as McpException("MCP circuit breaker open — too many consecutive failures", isTransient: false). ROB-03 satisfied.
+- **12-03 COMPLETE (2026-06-01):** GsdOrchestrator.Tests xUnit project added — net10.0, NSubstitute 5.3.0, coverlet.collector 10.0.1; 7 deterministic [Fact] tests covering all GsdStateMachine paths (success, exception, cancel, no-handler, multi-state, resume, missing-checkpoint); GithubMCP.slnx updated; CI green (runs 26667629503, 26667645176, 26667648500). ROB-02 satisfied.
 
 ## Key Decisions
 
