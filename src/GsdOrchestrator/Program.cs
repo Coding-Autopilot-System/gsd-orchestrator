@@ -9,6 +9,7 @@ using GsdOrchestrator.Workflows.States;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Polly.CircuitBreaker;
 using Serilog;
 using Serilog.Formatting.Compact;
 
@@ -62,7 +63,19 @@ builder.Services.AddSingleton<IMcpClient>(sp =>
 builder.Services.AddSingleton<McpToolDispatcher>();
 
 // ── Polly resilience pipeline ────────────────────────────────────────────────────────────
+// AddCircuitBreaker MUST come before AddRetry — outermost strategy trips first,
+// preventing retry budget waste when MCP is unavailable (D-07, D-08).
 builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineBuilder
+    .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+    {
+        // "5 consecutive failures within 60s" expressed as ratio-based (Polly v8 only has ratio-based CB)
+        FailureRatio = 1.0,
+        SamplingDuration = TimeSpan.FromSeconds(60),
+        MinimumThroughput = 5,
+        BreakDuration = TimeSpan.FromSeconds(30),
+        ShouldHandle = new PredicateBuilder()
+            .Handle<McpException>(ex => ex.IsTransient && !ex.IsSecondaryRateLimit)
+    })
     .AddRetry(new Polly.Retry.RetryStrategyOptions
     {
         MaxRetryAttempts = 3,
