@@ -49,13 +49,15 @@ public sealed class GsdStateMachine
         var ctx = await _checkpoints.LoadAsync(workflowId, ct)
             ?? throw new InvalidOperationException($"No checkpoint found for workflow '{workflowId}'");
 
-        _logger.LogInformation("Resuming workflow {Id} from state {State}", workflowId, ctx.CurrentState);
+        _logger.LogInformation("Resuming workflow {WorkflowId} from state {StateName}", workflowId, ctx.CurrentState);
         return await ExecuteLoopAsync(ctx, ct);
     }
 
     private async Task<GsdWorkflowContext> ExecuteLoopAsync(GsdWorkflowContext ctx, CancellationToken ct)
     {
-        _logger.LogInformation("Workflow {Id} starting at state {State}", ctx.WorkflowId, ctx.CurrentState);
+        _logger.LogInformation(
+            "Workflow {WorkflowId} starting at state {StateName}. IssueNumber={IssueNumber}",
+            ctx.WorkflowId, ctx.CurrentState, ctx.Issue?.Number);
 
         while (ctx.CurrentState is not WorkflowState.Done and not WorkflowState.Failed)
         {
@@ -64,24 +66,35 @@ public sealed class GsdStateMachine
             if (!_states.TryGetValue(ctx.CurrentState, out var stateHandler))
                 throw new InvalidOperationException($"No handler registered for state {ctx.CurrentState}");
 
+            var previousState = ctx.CurrentState;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 // Checkpoint BEFORE executing (so we can resume from this state)
                 await _checkpoints.SaveAsync(ctx, ct);
 
                 ctx = await stateHandler.ExecuteAsync(ctx, ct);
+                sw.Stop();
 
-                _logger.LogInformation("[{Id}] → {State}", ctx.WorkflowId, ctx.CurrentState);
+                _logger.LogInformation(
+                    "State {StateName} completed in {DurationMs}ms — WorkflowId={WorkflowId} IssueNumber={IssueNumber} NextState={NextState}",
+                    previousState, sw.ElapsedMilliseconds, ctx.WorkflowId, ctx.Issue?.Number, ctx.CurrentState);
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Workflow {Id} cancelled at state {State}", ctx.WorkflowId, ctx.CurrentState);
+                sw.Stop();
+                _logger.LogWarning(
+                    "Workflow {WorkflowId} cancelled at state {StateName} after {DurationMs}ms. IssueNumber={IssueNumber}",
+                    ctx.WorkflowId, previousState, sw.ElapsedMilliseconds, ctx.Issue?.Number);
                 await _checkpoints.SaveAsync(ctx, ct);
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Workflow {Id} failed at state {State}", ctx.WorkflowId, ctx.CurrentState);
+                sw.Stop();
+                _logger.LogError(ex,
+                    "Workflow {WorkflowId} failed at state {StateName} after {DurationMs}ms. IssueNumber={IssueNumber}",
+                    ctx.WorkflowId, previousState, sw.ElapsedMilliseconds, ctx.Issue?.Number);
                 ctx = (ctx with { FailureReason = ex.Message }).Transition(WorkflowState.Failed);
             }
         }
@@ -106,17 +119,12 @@ public sealed class GsdStateMachine
         if (ctx.Issue is null) return;
         try
         {
-            var body = $"""
-                🤖 **GSD Orchestrator failed**
-
-                Last state: `{ctx.History.LastOrDefault()?.From}`
-                Reason: {ctx.FailureReason ?? "Unknown error"}
-
-                The workflow checkpoint is saved for debugging. Resume with:
-                ```
-                dotnet run -- --resume {ctx.WorkflowId}
-                ```
-                """;
+            var body = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"🤖 **GSD Orchestrator failed**\n\n"
+                + $"Last state: `{ctx.History.LastOrDefault()?.From}`\n"
+                + $"Reason: {ctx.FailureReason ?? "Unknown error"}\n\n"
+                + $"The workflow checkpoint is saved for debugging. Resume with:\n"
+                + $"```\ndotnet run -- --resume {ctx.WorkflowId}\n```");
 
             await _mcp.CallAsync("add_issue_comment", new System.Text.Json.Nodes.JsonObject
             {

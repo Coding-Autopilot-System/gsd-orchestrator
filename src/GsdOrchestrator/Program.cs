@@ -9,11 +9,14 @@ using GsdOrchestrator.Workflows.States;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Polly.CircuitBreaker;
+using Serilog;
+using Serilog.Formatting.Compact;
 
-// ── Load .env before anything else ───────────────────────────────────────────
+// ── Load .env before anything else ─────────────────────────────────────────────
 DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4));
 
-// ── Simple args parsing ───────────────────────────────────────────────────────
+// ── Simple args parsing ──────────────────────────────────────────────────
 int? issueNumber = null;
 string? resumeId = null;
 bool watchMode = false;
@@ -37,26 +40,42 @@ if (issueNumber is null && resumeId is null && !watchMode)
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
-// ── Logging ───────────────────────────────────────────────────────────────────
-builder.Logging.AddSimpleConsole(o => o.IncludeScopes = false);
-builder.Services.AddLogging(lb => lb.AddFilter("Microsoft", LogLevel.Warning));
+// ── Logging ──────────────────────────────────────────────────────────────
+builder.Services.AddSerilog(lc =>
+    lc.MinimumLevel.Information()
+      .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+      .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+      .Enrich.FromLogContext()
+      .WriteTo.Console(new CompactJsonFormatter()));
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<GitHubPatProvider>();
 
-// ── MCP Client ───────────────────────────────────────────────────────────────
+// ── MCP Client ──────────────────────────────────────────────────────────────────
 var binaryPath = builder.Configuration["GSD_MCP_BINARY"] ?? FindMcpBinary();
 
 builder.Services.AddSingleton<IMcpClient>(sp =>
 {
     var pat = sp.GetRequiredService<GitHubPatProvider>();
-    var logger = sp.GetRequiredService<ILogger<McpStdioClient>>();
-    return new McpStdioClient(pat.Token, binaryPath, logger);
+    var mcpLogger = sp.GetRequiredService<ILogger<McpStdioClient>>();
+    return new McpStdioClient(pat.Token, binaryPath, mcpLogger);
 });
 builder.Services.AddSingleton<McpToolDispatcher>();
 
-// ── Polly resilience pipeline ─────────────────────────────────────────────────
+// ── Polly resilience pipeline ────────────────────────────────────────────────────────────
+// AddCircuitBreaker MUST come before AddRetry — outermost strategy trips first,
+// preventing retry budget waste when MCP is unavailable (D-07, D-08).
 builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineBuilder
+    .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+    {
+        // "5 consecutive failures within 60s" expressed as ratio-based (Polly v8 only has ratio-based CB)
+        FailureRatio = 1.0,
+        SamplingDuration = TimeSpan.FromSeconds(60),
+        MinimumThroughput = 5,
+        BreakDuration = TimeSpan.FromSeconds(30),
+        ShouldHandle = new PredicateBuilder()
+            .Handle<McpException>(ex => ex.IsTransient && !ex.IsSecondaryRateLimit)
+    })
     .AddRetry(new Polly.Retry.RetryStrategyOptions
     {
         MaxRetryAttempts = 3,
@@ -68,7 +87,7 @@ builder.Services.AddResiliencePipeline("mcp-tools", pipelineBuilder => pipelineB
                 : ValueTask.FromResult(false)
     }));
 
-// ── LLM Client (Anthropic Claude via Anthropic.SDK) ──────────────────────────
+// ── LLM Client (Anthropic Claude via Anthropic.SDK) ────────────────────────────
 builder.Services.AddSingleton<IChatClient>(sp =>
 {
     var key = builder.Configuration["ANTHROPIC_API_KEY"]
@@ -77,15 +96,15 @@ builder.Services.AddSingleton<IChatClient>(sp =>
     return (IChatClient)anthropic.Messages;
 });
 
-// ── Checkpointing ─────────────────────────────────────────────────────────────
+// ── Checkpointing ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<ICheckpointStore>(sp =>
 {
-    var logger = sp.GetRequiredService<ILogger<FileCheckpointStore>>();
+    var cpLogger = sp.GetRequiredService<ILogger<FileCheckpointStore>>();
     var repoRoot = Directory.GetCurrentDirectory();
-    return new FileCheckpointStore(repoRoot, logger);
+    return new FileCheckpointStore(repoRoot, cpLogger);
 });
 
-// ── Workflow states ───────────────────────────────────────────────────────────
+// ── Workflow states ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IWorkflowState, IdleState>();
 builder.Services.AddSingleton<IWorkflowState, AnalyzingState>();
 builder.Services.AddSingleton<IWorkflowState, BranchingState>();
@@ -100,7 +119,7 @@ builder.Services.AddSingleton<GsdStateMachine>();
 
 var host = builder.Build();
 
-// ── Run ───────────────────────────────────────────────────────────────────────
+// ── Run ───────────────────────────────────────────────────────────────────────────
 var sm = host.Services.GetRequiredService<GsdStateMachine>();
 var mcp = host.Services.GetRequiredService<IMcpClient>();
 var config = host.Services.GetRequiredService<IConfiguration>();
@@ -137,11 +156,11 @@ else
 
 await (mcp as IAsyncDisposable)!.DisposeAsync();
 
-// ── Watch mode ────────────────────────────────────────────────────────────────
+// ── Watch mode ──────────────────────────────────────────────────────────────────
 static async Task RunWatchModeAsync(
     GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
     string owner, string repo,
-    ILogger logger, CancellationToken ct)
+    ILogger<Program> logger, CancellationToken ct)
 {
     var pollInterval = TimeSpan.FromMinutes(5);
     var processedIssues = new HashSet<int>();
@@ -208,7 +227,7 @@ static void PrintResult(GsdWorkflowContext result)
     }
 }
 
-// ── Binary discovery ──────────────────────────────────────────────────────────
+// ── Binary discovery ──────────────────────────────────────────────────────────────
 static string FindMcpBinary()
 {
     var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
