@@ -43,6 +43,25 @@ public sealed class GsdStateMachine
         return ExecuteLoopAsync(ctx, ct);
     }
 
+    /// <summary>Starts a new workflow with optional triage-only mode.</summary>
+    public Task<GsdWorkflowContext> RunAsync(string owner, string repo, int issueNumber, bool triageModeOnly, CancellationToken ct)
+    {
+        var ctx = new GsdWorkflowContext
+        {
+            Issue = new IssueContext(
+                Number: issueNumber,
+                Title: $"Issue #{issueNumber}",
+                Body: "",
+                Labels: [],
+                RepoOwner: owner,
+                RepoName: repo,
+                DefaultBranch: "main"),
+            CurrentState = WorkflowState.Idle,
+            TriageModeOnly = triageModeOnly
+        };
+        return ExecuteLoopAsync(ctx, ct);
+    }
+
     /// <summary>Resumes an interrupted workflow from its last checkpoint.</summary>
     public async Task<GsdWorkflowContext> ResumeAsync(string workflowId, CancellationToken ct)
     {

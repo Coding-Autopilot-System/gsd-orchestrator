@@ -20,20 +20,29 @@ DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4
 int? issueNumber = null;
 string? resumeId = null;
 bool watchMode = false;
+bool triageModeOnly = false;
 
 for (int i = 0; i < args.Length; i++)
 {
     if (args[i] == "--issue" && i + 1 < args.Length && int.TryParse(args[i + 1], out var n)) issueNumber = n;
     if (args[i] == "--resume" && i + 1 < args.Length) resumeId = args[i + 1];
     if (args[i] == "--watch") watchMode = true;
+    if (args[i] == "--triage") triageModeOnly = true;
+}
+
+if (triageModeOnly && issueNumber is null)
+{
+    Console.Error.WriteLine("Error: --triage requires --issue <number>");
+    Environment.Exit(1);
 }
 
 if (issueNumber is null && resumeId is null && !watchMode)
 {
     Console.Error.WriteLine("Usage:");
-    Console.Error.WriteLine("  dotnet run -- --issue <number>       Run workflow for a specific issue");
-    Console.Error.WriteLine("  dotnet run -- --resume <workflow-id> Resume an interrupted workflow");
-    Console.Error.WriteLine("  dotnet run -- --watch                Poll open issues and process them automatically");
+    Console.Error.WriteLine("  dotnet run -- --issue <number>               Run workflow for a specific issue");
+    Console.Error.WriteLine("  dotnet run -- --issue <number> --triage      Classify issue only (no code changes)");
+    Console.Error.WriteLine("  dotnet run -- --resume <workflow-id>         Resume an interrupted workflow");
+    Console.Error.WriteLine("  dotnet run -- --watch                        Poll open issues and process them automatically");
     Environment.Exit(1);
 }
 
@@ -106,6 +115,7 @@ builder.Services.AddSingleton<ICheckpointStore>(sp =>
 
 // ── Workflow states ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IWorkflowState, IdleState>();
+builder.Services.AddSingleton<IWorkflowState, TriagingState>();
 builder.Services.AddSingleton<IWorkflowState, AnalyzingState>();
 builder.Services.AddSingleton<IWorkflowState, BranchingState>();
 builder.Services.AddSingleton<IWorkflowState, EditingState>();
@@ -150,7 +160,7 @@ else if (resumeId is not null)
 }
 else
 {
-    var result = await sm.RunAsync(owner, repo, issueNumber!.Value, cts.Token);
+    var result = await sm.RunAsync(owner, repo, issueNumber!.Value, triageModeOnly, cts.Token);
     PrintResult(result);
 }
 

@@ -61,6 +61,6 @@ public sealed class IdleState : IWorkflowState
             DefaultBranch: defaultBranch);
 
         _logger.LogInformation("Issue fetched: \"{Title}\"", issue.Title);
-        return (ctx with { Issue = issue }).Transition(WorkflowState.Analyzing);
+        return (ctx with { Issue = issue }).Transition(WorkflowState.Triaging);
     }
 }
