@@ -5,6 +5,7 @@ namespace GsdOrchestrator.Workflows.Models;
 public enum WorkflowState
 {
     Idle,
+    Triaging,      // Phase 13: issue classification before analysis
     Analyzing,
     Branching,
     Editing,
@@ -69,6 +70,11 @@ public sealed record PullRequestContext(
     string Title,
     string Body);
 
+public sealed record TriageResult(
+    string Classification,
+    string Reason,
+    int? DuplicateNumber);
+
 public sealed record StateTransitionEvent(
     WorkflowState From,
     WorkflowState To,
@@ -87,6 +93,8 @@ public sealed record GsdWorkflowContext
     public ValidationResult? Validation { get; init; }
     public CommitContext? Commit { get; init; }
     public PullRequestContext? PullRequest { get; init; }
+    public TriageResult? Triage { get; init; }
+    public bool TriageModeOnly { get; init; } = false;
     public WorkflowState CurrentState { get; init; } = WorkflowState.Idle;
     public int RetryCount { get; init; }
     public string? FailureReason { get; init; }

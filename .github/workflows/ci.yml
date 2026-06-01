@@ -1,0 +1,25 @@
+# Source: verified against docs.github.com/actions/tutorials/build-and-test-code/net
+# and github.com/actions/runner-images/issues/13789 (MSBuild pinning)
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.1xx'
+
+      - name: Restore dependencies
+        run: dotnet restore src/GsdOrchestrator/GsdOrchestrator.csproj
+
+      - name: Build
+        run: dotnet build src/GsdOrchestrator/GsdOrchestrator.csproj --no-restore --configuration Release
