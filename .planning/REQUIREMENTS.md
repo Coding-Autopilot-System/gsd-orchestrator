@@ -80,7 +80,7 @@
 
 - [x] **ROB-01**: Serilog structured logging integrated — all state transitions, errors, and Claude calls emit structured log events — Phase 12 (12-01) ✓
 - [ ] **ROB-02**: xUnit test project added with >= 20% coverage on GsdStateMachine and McpStdioClient
-- [ ] **ROB-03**: Polly circuit breaker added for MCP tool calls (complements existing retry policy)
+- [x] **ROB-03**: Polly circuit breaker added for MCP tool calls (complements existing retry policy) — Phase 12 (12-02) ✓
 
 ### Smarter Issue Triage (TRIAGE)
 

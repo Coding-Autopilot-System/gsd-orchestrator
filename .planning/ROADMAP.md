@@ -323,7 +323,7 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md — Serilog structured logging: add packages to csproj, register AddSerilog in Program.cs, instrument GsdStateMachine (ROB-01) [Wave 1] — 2026-05-29
-- [ ] 12-02-PLAN.md — Polly circuit breaker: extend AddResiliencePipeline with AddCircuitBreaker, catch BrokenCircuitException in McpToolDispatcher (ROB-03) [Wave 1]
+- [x] 12-02-PLAN.md — Polly circuit breaker: extend AddResiliencePipeline with AddCircuitBreaker, catch BrokenCircuitException in McpToolDispatcher (ROB-03) [Wave 1] — 2026-05-30
 - [ ] 12-03-PLAN.md — xUnit test project: create GsdOrchestrator.Tests, write 7 GsdStateMachine unit tests with NSubstitute mocks (ROB-02) [Wave 2]
 
 **Success Criteria:**

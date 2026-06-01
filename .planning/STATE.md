@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v3.0.0
-milestone_name: gsd-orchestrator Feature Expansion
+milestone_name: milestone
+current_plan: "12-02 COMPLETE — next: 12-03 (xUnit test project)"
 status: in-progress
-last_updated: "2026-05-29T23:24:00.000Z"
+last_updated: "2026-06-01T08:09:51.243Z"
 progress:
-  total_phases: 5
-  completed_phases: 0
-  total_plans: 13
-  completed_plans: 1
-  percent: 8
+  total_phases: 12
+  completed_phases: 12
+  total_plans: 37
+  completed_plans: 37
+  percent: 100
 ---
 
 # Project State — gsd-orchestrator Feature Expansion (Milestone 3.0)
@@ -17,16 +18,16 @@ progress:
 ## Current Status
 
 **Active Phase:** Phase 12 — Robustness Foundation (in-progress)
-**Current Plan:** 12-01 COMPLETE — next: 12-02 (xUnit tests)
-**Last Completed:** Phase 12 Plan 01 — Serilog structured logging (2026-05-29)
+**Current Plan:** 12-02 COMPLETE — next: 12-03 (xUnit test project)
+**Last Completed:** Phase 12 Plan 02 — Polly v8 circuit breaker for MCP tool calls (2026-05-30)
 **Milestone:** 3.0 — gsd-orchestrator Feature Expansion
-**Last Updated:** 2026-05-29T23:24:00Z
+**Last Updated:** 2026-05-30T00:25:00Z
 
 ## Milestone 3.0 Phase Progress
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 12 | Robustness Foundation | in-progress (1/3 plans done) |
+| 12 | Robustness Foundation | in-progress (2/3 plans done) |
 | 13 | Smarter Issue Triage | not started |
 | 14 | Autonomous Test Generation | not started |
 | 15 | PR Review Loop | not started |
@@ -43,11 +44,15 @@ progress:
 ## Phase 12 Results (in-progress)
 
 - **12-01 COMPLETE (2026-05-29):** Serilog structured JSON logging added — AddSerilog + CompactJsonFormatter in Program.cs; GsdStateMachine.ExecuteLoopAsync emits WorkflowId, StateName, IssueNumber, DurationMs on all state transitions; CI green (run 26667165640). ROB-01 satisfied.
+- **12-02 COMPLETE (2026-05-30):** Polly v8 ratio-based circuit breaker added — AddCircuitBreaker (FailureRatio=1.0, MinimumThroughput=5, SamplingDuration=60s, BreakDuration=30s) registered before AddRetry in mcp-tools pipeline; BrokenCircuitException caught in McpToolDispatcher.CallAsync, rethrown as McpException("MCP circuit breaker open — too many consecutive failures", isTransient: false). ROB-03 satisfied.
 
 ## Key Decisions
 
 - **D-AddSerilog:** Used `builder.Services.AddSerilog()` (IServiceCollection API) not `builder.Host.UseSerilog()` (IHostBuilder API) — HostApplicationBuilder does not expose .Host property
 - **D-ILogger-generic:** Used `ILogger<T>` generic form throughout to avoid Serilog.ILogger vs MEL.ILogger ambiguity without using alias
+- **D-CB-ORDER:** AddCircuitBreaker registered before AddRetry (outermost strategy) — Polly v8 executes outer first; prevents 3 retry attempts when circuit is open
+- **D-CB-RATIO:** Polly v8 has no consecutive-failure CB; D-08 "5 consecutive failures in 60s" expressed as FailureRatio=1.0, MinimumThroughput=5, SamplingDuration=60s
+- **D-CB-ISNTRANSIENT:** Rethrown McpException uses isTransient=false to prevent re-entry into retry/CB on open-circuit error path
 
 ## Completed Work (pre-planning)
 
