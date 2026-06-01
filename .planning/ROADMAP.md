@@ -366,11 +366,7 @@ Plans:
 
 **Requirements:** TESTGEN-01, TESTGEN-02, TESTGEN-03
 
-**Plans:** 2 plans
-
-Plans:
-- [ ] 13-01-PLAN.md — Merge Phase 12 test infrastructure, extend WorkflowModels with triage types, write 7 TriagingStateTests (Wave 0 RED) (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 1]
-- [ ] 13-02-PLAN.md — Create TriagingState.cs, wire into IdleState + Program.cs + GsdStateMachine, all 14 tests GREEN (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 2]
+**Plans:** TBD
 
 **Success Criteria:**
 - `TestGeneratingState` executes after `EditingState`
@@ -388,11 +384,7 @@ Plans:
 
 **Requirements:** REV-01, REV-02, REV-03
 
-**Plans:** 2 plans
-
-Plans:
-- [ ] 13-01-PLAN.md — Merge Phase 12 test infrastructure, extend WorkflowModels with triage types, write 7 TriagingStateTests (Wave 0 RED) (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 1]
-- [ ] 13-02-PLAN.md — Create TriagingState.cs, wire into IdleState + Program.cs + GsdStateMachine, all 14 tests GREEN (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 2]
+**Plans:** TBD
 
 **Success Criteria:**
 - `--pr <N>` mode reads diff, invokes Claude, posts inline comments with severity
@@ -410,11 +402,7 @@ Plans:
 
 **Requirements:** MULTI-01, MULTI-02, MULTI-03, MULTI-04
 
-**Plans:** 2 plans
-
-Plans:
-- [ ] 13-01-PLAN.md — Merge Phase 12 test infrastructure, extend WorkflowModels with triage types, write 7 TriagingStateTests (Wave 0 RED) (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 1]
-- [ ] 13-02-PLAN.md — Create TriagingState.cs, wire into IdleState + Program.cs + GsdStateMachine, all 14 tests GREEN (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 2]
+**Plans:** TBD
 
 **Success Criteria:**
 - `GSD_REPOS` JSON array replaces single owner/repo env vars (backwards compatible)

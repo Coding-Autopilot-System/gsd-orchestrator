@@ -617,7 +617,7 @@ Phase 13 introduces no new attack surface beyond what already exists. The triage
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`update_issue` vs `close_issue` tool name**
    - What we know: GitHub MCP server is present locally; other tool names follow GitHub API naming
