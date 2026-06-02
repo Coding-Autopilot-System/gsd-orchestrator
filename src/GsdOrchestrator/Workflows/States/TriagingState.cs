@@ -105,13 +105,21 @@ public sealed class TriagingState : IWorkflowState
         }
     }
 
-    private static string BuildTriagePrompt(IssueContext issue, string openIssuesSummary) =>
-        $$"""
+    private static string BuildTriagePrompt(IssueContext issue, string openIssuesSummary)
+    {
+        var sanitisedTitle = issue.Title.Length > 200
+            ? issue.Title[..200] + "[truncated]"
+            : issue.Title;
+        var sanitisedBody = issue.Body.Length > 2000
+            ? issue.Body[..2000] + "\n[truncated]"
+            : issue.Body;
+
+        return $$"""
         You are a software issue triage bot. Classify the following GitHub issue.
 
-        Issue #{{issue.Number}}: {{issue.Title}}
+        Issue #{{issue.Number}}: {{sanitisedTitle}}
         Body:
-        {{issue.Body}}
+        {{sanitisedBody}}
         Labels: {{string.Join(", ", issue.Labels)}}
 
         {{openIssuesSummary}}
@@ -131,6 +139,7 @@ public sealed class TriagingState : IWorkflowState
         - duplicate: same problem as another open issue (duplicateNumber required)
         - out-of-scope: feature request outside project goals, or spam
         """;
+    }
 
     private static TriageResult? TryParseTriageResult(string text)
     {
