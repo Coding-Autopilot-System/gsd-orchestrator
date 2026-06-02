@@ -60,7 +60,7 @@ public sealed class TriagingState : IWorkflowState
         await PostTriageCommentAsync(issue, triageResult, ct);
 
         // 5. Handle skip logic for non-actionable classifications
-        if (triageResult.Classification is "duplicate" or "out-of-scope")
+        if (triageResult.Classification is "duplicate" or "out-of-scope" or "needs-info")
         {
             await TryCloseIssueAsync(issue, triageResult, ct);
         }
