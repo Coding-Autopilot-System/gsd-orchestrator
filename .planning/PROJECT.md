@@ -114,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-29 — Milestone 3.0 started. Feature work on gsd-orchestrator: 5 phases (12-16), 13 requirements. Phase 12 (Robustness Foundation) is next.*
+*Last updated: 2026-06-02 — Phase 13 complete. TriagingState added — LLM-powered issue classification (actionable/needs-info/duplicate/out-of-scope) now runs before full planning. 14 tests green. Phase 14 (Autonomous Test Generation) is next.*
