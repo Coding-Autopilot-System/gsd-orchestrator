@@ -346,8 +346,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Merge Phase 12 test infrastructure, extend WorkflowModels with triage types, write 7 TriagingStateTests (Wave 0 RED) (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 1]
-- [ ] 13-02-PLAN.md — Create TriagingState.cs, wire into IdleState + Program.cs + GsdStateMachine, all 14 tests GREEN (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 2]
+- [x] 13-01-PLAN.md — Merge Phase 12 test infrastructure, extend WorkflowModels with triage types, write 7 TriagingStateTests (Wave 0 RED) (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 1] — 2026-06-02
+- [x] 13-02-PLAN.md — Create TriagingState.cs, wire into IdleState + Program.cs + GsdStateMachine, all 14 tests GREEN (TRIAGE-01, TRIAGE-02, TRIAGE-03, TRIAGE-04) [Wave 2] — 2026-06-02
 
 **Success Criteria:**
 - `TriagingState` inserted between `IdleState` and `AnalyzingState`
