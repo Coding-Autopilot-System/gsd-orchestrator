@@ -152,7 +152,9 @@ public sealed class TriagingState : IWorkflowState
             return new TriageResult(
                 Classification: classification,
                 Reason: node["reason"]?.GetValue<string>() ?? "",
-                DuplicateNumber: node["duplicateNumber"]?.GetValue<int?>());
+                DuplicateNumber: node["duplicateNumber"] is JsonValue dupVal
+                    ? dupVal.GetValue<int>()
+                    : (int?)null);
         }
         catch { return null; }
     }
