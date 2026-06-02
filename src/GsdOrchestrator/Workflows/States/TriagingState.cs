@@ -144,10 +144,7 @@ public sealed class TriagingState : IWorkflowState
 
             var classification = node["classification"]?.GetValue<string>() ?? "";
             if (classification is not ("actionable" or "needs-info" or "duplicate" or "out-of-scope"))
-            {
-                // Pitfall 1: unknown classification defaults to actionable (conservative)
-                return new TriageResult("actionable", $"Unknown classification '{classification}' — defaulting to actionable", null);
-            }
+                return null; // treat as parse failure — retry will fire
 
             return new TriageResult(
                 Classification: classification,
