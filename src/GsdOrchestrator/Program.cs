@@ -237,8 +237,16 @@ static void PrintResult(GsdWorkflowContext result)
     if (result.CurrentState == WorkflowState.Done)
     {
         Console.WriteLine();
-        Console.WriteLine($"✓ PR created:   {result.PullRequest?.PrUrl}");
-        Console.WriteLine($"✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md");
+        if (result.Triage is not null && result.PullRequest is null)
+        {
+            // Triage-only run — no PR was created
+            Console.WriteLine($"Triage complete: [{result.Triage.Classification}] {result.Triage.Reason}");
+        }
+        else
+        {
+            Console.WriteLine($"✓ PR created:   {result.PullRequest?.PrUrl}");
+            Console.WriteLine($"✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md");
+        }
         Console.WriteLine($"  Workflow ID:  {result.WorkflowId}");
     }
     else
