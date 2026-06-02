@@ -105,7 +105,8 @@ public sealed class GsdStateMachine
                 _logger.LogWarning(
                     "Workflow {WorkflowId} cancelled at state {StateName} after {DurationMs}ms. IssueNumber={IssueNumber}",
                     ctx.WorkflowId, previousState, sw.ElapsedMilliseconds, ctx.Issue?.Number);
-                await _checkpoints.SaveAsync(ctx, ct);
+                // Use CancellationToken.None — the user-facing ct is already cancelled
+                await _checkpoints.SaveAsync(ctx, CancellationToken.None);
                 throw;
             }
             catch (Exception ex)
