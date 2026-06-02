@@ -173,6 +173,10 @@ static async Task RunWatchModeAsync(
     ILogger<Program> logger, CancellationToken ct)
 {
     var pollInterval = TimeSpan.FromMinutes(5);
+    // Bounded set: keep only the last 500 processed issue numbers to avoid unbounded growth.
+    // When full, the oldest 100 entries are evicted so re-opened issues can be reprocessed.
+    const int processedIssuesCapacity = 500;
+    const int processedIssuesEvictCount = 100;
     var processedIssues = new HashSet<int>();
     logger.LogInformation("Watch mode started — polling {Owner}/{Repo} every {Interval}m", owner, repo, pollInterval.TotalMinutes);
 
@@ -203,7 +207,14 @@ static async Task RunWatchModeAsync(
             {
                 if (ct.IsCancellationRequested) break;
                 logger.LogInformation("Processing issue #{Number}", num);
-                var ctx = await sm.RunAsync(owner, repo, num, ct);
+                // triageModeOnly: false — watch mode always runs the full workflow
+                var ctx = await sm.RunAsync(owner, repo, num, triageModeOnly: false, ct);
+                if (processedIssues.Count >= processedIssuesCapacity)
+                {
+                    // Evict oldest entries to keep set bounded
+                    foreach (var old in processedIssues.Take(processedIssuesEvictCount).ToList())
+                        processedIssues.Remove(old);
+                }
                 processedIssues.Add(num);
                 PrintResult(ctx);
             }
