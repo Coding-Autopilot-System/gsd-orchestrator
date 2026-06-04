@@ -33,8 +33,9 @@ public class TestGeneratingStateTests
             CurrentState = WorkflowState.TestGenerating
         };
 
-    // Returns IChatClient mock that simulates a write_file tool call on first call,
-    // then Stop on subsequent calls (exits the ReAct loop).
+    // Returns IChatClient mock that always simulates a write_file tool call.
+    // The ReAct loop exits immediately after write_file content is captured (finalContent != null),
+    // so returning toolCallResponse on every call correctly handles both single and multi-file scenarios.
     private static IChatClient BuildLlmWithToolCall()
     {
         var llm = Substitute.For<IChatClient>();
@@ -48,16 +49,12 @@ public class TestGeneratingStateTests
             });
         var toolCallMsg = new ChatMessage(ChatRole.Assistant, [functionCall]);
         var toolCallResponse = new ChatResponse(toolCallMsg) { FinishReason = ChatFinishReason.ToolCalls };
-        var stopResponse = new ChatResponse(
-            new ChatMessage(ChatRole.Assistant, "done")) { FinishReason = ChatFinishReason.Stop };
 
         llm.GetResponseAsync(
                 Arg.Any<IEnumerable<ChatMessage>>(),
                 Arg.Any<ChatOptions?>(),
                 Arg.Any<CancellationToken>())
-           .Returns(
-               Task.FromResult(toolCallResponse),
-               Task.FromResult(stopResponse));
+           .Returns(Task.FromResult(toolCallResponse));
         return llm;
     }
 

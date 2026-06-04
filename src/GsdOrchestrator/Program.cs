@@ -119,6 +119,7 @@ builder.Services.AddSingleton<IWorkflowState, TriagingState>();
 builder.Services.AddSingleton<IWorkflowState, AnalyzingState>();
 builder.Services.AddSingleton<IWorkflowState, BranchingState>();
 builder.Services.AddSingleton<IWorkflowState, EditingState>();
+builder.Services.AddSingleton<IWorkflowState, TestGeneratingState>();
 builder.Services.AddSingleton<IWorkflowState, ValidatingState>();
 builder.Services.AddSingleton<IWorkflowState, CommittingState>();
 builder.Services.AddSingleton<IWorkflowState, PrCreatingState>();

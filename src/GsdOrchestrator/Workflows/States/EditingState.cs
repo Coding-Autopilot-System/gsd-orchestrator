@@ -39,7 +39,7 @@ public sealed class EditingState : IWorkflowState
                 edits.Add(edit);
         }
 
-        return (ctx with { Edits = new EditContext(edits) }).Transition(WorkflowState.Validating);
+        return (ctx with { Edits = new EditContext(edits) }).Transition(WorkflowState.TestGenerating);
     }
 
     private async Task<FileEdit?> EditFileAsync(
