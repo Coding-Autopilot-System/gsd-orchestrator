@@ -366,7 +366,11 @@ Plans:
 
 **Requirements:** TESTGEN-01, TESTGEN-02, TESTGEN-03
 
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Extend WorkflowModels with TestGenerating types; 7 RED test stubs (TESTGEN-01, TESTGEN-02) [Wave 1]
+- [ ] 14-02-PLAN.md — Implement TestGeneratingState + wire EditingState/ValidatingState/Program.cs; all 7 tests GREEN (TESTGEN-01, TESTGEN-02, TESTGEN-03) [Wave 2]
 
 **Success Criteria:**
 - `TestGeneratingState` executes after `EditingState`
