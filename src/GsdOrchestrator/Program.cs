@@ -143,10 +143,8 @@ var logger = host.Services.GetRequiredService<ILogger<Program>>();
 await mcp.InitializeAsync();
 logger.LogInformation("GitHub MCP Server ready (binary: {Binary})", binaryPath);
 
-var owner = config["GSD_GITHUB_OWNER"]
-    ?? throw new InvalidOperationException("GSD_GITHUB_OWNER not set");
-var repo = config["GSD_GITHUB_REPO"]
-    ?? throw new InvalidOperationException("GSD_GITHUB_REPO not set");
+// MULTI-01: load all configured repos (GSD_REPOS JSON array or legacy single-repo env vars)
+var repos = RepoConfigLoader.Load(config);
 
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
@@ -155,11 +153,19 @@ var mcpDispatcher = host.Services.GetRequiredService<McpToolDispatcher>();
 
 if (watchMode)
 {
-    await RunWatchModeAsync(sm, mcpDispatcher, owner, repo, logger, cts.Token);
+    // MULTI-02: process all configured repos in sequence
+    foreach (var repoConfig in repos)
+    {
+        if (cts.Token.IsCancellationRequested) break;
+        logger.LogInformation("Starting watch for {Owner}/{Repo}", repoConfig.Owner, repoConfig.Repo);
+        await RunWatchModeAsync(sm, mcpDispatcher, repoConfig.Owner, repoConfig.Repo,
+            repoConfig.RateLimitDelaySeconds, logger, cts.Token);
+    }
 }
 else if (prNumber is not null)
 {
-    var result = await RunPrReviewAsync(sm, mcpDispatcher, owner, repo, prNumber.Value, logger, cts.Token);
+    var primary = repos[0];
+    var result = await RunPrReviewAsync(sm, mcpDispatcher, primary.Owner, primary.Repo, prNumber.Value, logger, cts.Token);
     PrintPrReviewResult(result);
 }
 else if (resumeId is not null)
@@ -169,7 +175,9 @@ else if (resumeId is not null)
 }
 else
 {
-    var result = await sm.RunAsync(owner, repo, issueNumber!.Value, triageModeOnly, cts.Token);
+    // Single-issue mode: use first configured repo (MULTI-01 backwards compat)
+    var primary = repos[0];
+    var result = await sm.RunAsync(primary.Owner, primary.Repo, issueNumber!.Value, triageModeOnly, cts.Token);
     PrintResult(result);
 }
 
@@ -179,6 +187,7 @@ await (mcp as IAsyncDisposable)!.DisposeAsync();
 static async Task RunWatchModeAsync(
     GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
     string owner, string repo,
+    int rateLimitDelaySeconds,
     ILogger<Program> logger, CancellationToken ct)
 {
     var pollInterval = TimeSpan.FromMinutes(5);
@@ -226,6 +235,13 @@ static async Task RunWatchModeAsync(
                 }
                 processedIssues.Add(num);
                 PrintResult(ctx);
+                // MULTI-04: configurable rate limit delay between issues within same poll cycle
+                if (num != pending.Last())
+                {
+                    logger.LogInformation("Rate limit delay: {Seconds}s before next issue", rateLimitDelaySeconds);
+                    try { await Task.Delay(TimeSpan.FromSeconds(rateLimitDelaySeconds), ct); }
+                    catch (OperationCanceledException) { break; }
+                }
             }
         }
         catch (OperationCanceledException) { break; }
