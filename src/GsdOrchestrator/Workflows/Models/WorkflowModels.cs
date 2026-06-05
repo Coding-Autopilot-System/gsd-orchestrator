@@ -177,7 +177,7 @@ public sealed record GsdWorkflowContext
     public WorkflowState CurrentState { get; init; } = WorkflowState.Idle;
     public int RetryCount { get; init; }
     public string? FailureReason { get; init; }
-    public List<StateTransitionEvent> History { get; init; } = [];
+    public IReadOnlyList<StateTransitionEvent> History { get; init; } = [];
 
     public GsdWorkflowContext Transition(WorkflowState to, string? detail = null) =>
         this with
