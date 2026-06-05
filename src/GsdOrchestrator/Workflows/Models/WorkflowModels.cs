@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
 
 namespace GsdOrchestrator.Workflows.Models;
 
@@ -110,6 +111,24 @@ public sealed record StateTransitionEvent(
     WorkflowState To,
     DateTimeOffset OccurredAt,
     string? Detail = null);
+
+// ── Phase 16: Multi-repo configuration ──────────────────────────────────────
+
+/// <summary>Identifies a single repo to watch/process and its per-repo rate limit delay.</summary>
+public sealed record RepoConfig(
+    string Owner,
+    string Repo,
+    int RateLimitDelaySeconds = 30);
+
+/// <summary>
+/// Loads the list of repos to watch from IConfiguration.
+/// MULTI-01: reads GSD_REPOS JSON array; falls back to GSD_GITHUB_OWNER + GSD_GITHUB_REPO.
+/// </summary>
+public static class RepoConfigLoader
+{
+    public static IReadOnlyList<RepoConfig> Load(IConfiguration config)
+        => throw new NotImplementedException("Wave 2 implementation pending");
+}
 
 // ── Root context ─────────────────────────────────────────────────────────────
 
