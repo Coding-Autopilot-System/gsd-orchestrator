@@ -114,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-06-05 — Phase 15 complete. ReviewingState dual-mode impl — `--pr <N>` reads PR diff, invokes Claude LLM (3-attempt retry), posts inline comments with severity, submits APPROVE/REQUEST_CHANGES via GitHub MCP. Legacy --issue path preserved (REV-03). 28 tests green. Phase 16 (Multi-Repo Support) is next.*
+*Last updated: 2026-06-05 — MILESTONE 3.0 COMPLETE. Phase 16 (Multi-Repo Support): GSD_REPOS JSON array replaces single owner/repo env vars (backwards compat); watch mode loops all repos with per-repo rate-limit delay; checkpoints namespaced {owner}_{repo}_{workflowId}.json; IdleState DI cleaned up. 35 tests green. All 5 phases (12–16) and 13 v3 requirements satisfied.*
