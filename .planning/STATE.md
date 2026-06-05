@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v3.0.0
 milestone_name: milestone
-current_plan: Phase 14 COMPLETE (2026-06-04) — 2 plans, verified
+current_plan: 1
 status: in-progress
-last_updated: "2026-06-05T00:00:00.000Z"
+last_updated: "2026-06-05T11:55:49.222Z"
 progress:
   total_phases: 16
   completed_phases: 14
-  total_plans: 43
+  total_plans: 45
   completed_plans: 41
   percent: 88
 ---
@@ -17,11 +17,11 @@ progress:
 
 ## Current Status
 
-**Active Phase:** Phase 15 — PR Review Loop (not started)
-**Current Plan:** Phase 14 COMPLETE (2026-06-04) — 2 plans, verified
+**Active Phase:** Phase 16 — Multi-Repo Support (planned — 2 plans ready)
+**Current Plan:** 1
 **Last Completed:** Phase 14 — Autonomous Test Generation (2026-06-04)
 **Milestone:** 3.0 — gsd-orchestrator Feature Expansion
-**Last Updated:** 2026-06-02T00:00:00Z
+**Last Updated:** 2026-06-05T00:00:00Z
 
 ## Milestone 3.0 Phase Progress
 
@@ -30,8 +30,8 @@ progress:
 | 12 | Robustness Foundation | complete (2026-06-01) |
 | 13 | Smarter Issue Triage | complete (2026-06-02) |
 | 14 | Autonomous Test Generation | complete (2026-06-04) |
-| 15 | PR Review Loop | not started |
-| 16 | Multi-Repo Support | not started |
+| 15 | PR Review Loop | planned (2026-06-05) |
+| 16 | Multi-Repo Support | planned (2026-06-05) |
 
 ## Phase 12 Plans
 
@@ -252,3 +252,17 @@ All 11 phases and 11 v2 requirements satisfied. Full portfolio live at:
 - https://github.com/OgeonX-Ai
 
 **One manual step outstanding:** Org owner must pin gsd-orchestrator, Promptimprover, autogen at https://github.com/Coding-Autopilot-System (no API available).
+
+## Phase 15 Plans
+
+| Plan | Objective | Wave | Autonomous |
+|------|-----------|------|------------|
+| 15-01 | Extend WorkflowModels with PR-review contracts (ReviewComment, ReviewResult, PrReviewContext); 7 RED test stubs | 1 | yes |
+| 15-02 | Implement PR-review-loop ReviewingState + --pr flag in Program.cs; all 28 tests GREEN | 2 | yes |
+
+## Phase 16 Plans
+
+| Plan | Objective | Wave | Autonomous |
+|------|-----------|------|------------|
+| 16-01 | Add RepoConfig record + RepoConfigLoader stub; namespace FileCheckpointStore.StatePath; 7 RED/GREEN test stubs | 1 | yes |
+| 16-02 | Implement RepoConfigLoader.Load(); remove IConfiguration from IdleState; multi-repo watch loop; all 30 tests GREEN | 2 | yes |
