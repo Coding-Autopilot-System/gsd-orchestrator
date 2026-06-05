@@ -58,7 +58,7 @@ public class GsdStateMachineTests
         var idleState = MakeState(WorkflowState.Idle, WorkflowState.Done);
         var sut = BuildSut(checkpoints, [idleState]);
 
-        var ctx = await sut.RunAsync("owner", "repo", 42, CancellationToken.None);
+        var ctx = await sut.RunAsync("owner", "repo", 42, triageModeOnly: false, CancellationToken.None);
 
         Assert.Equal(WorkflowState.Done, ctx.CurrentState);
         await checkpoints.Received().ArchiveAsync(ctx.WorkflowId, Arg.Any<CancellationToken>());
@@ -77,7 +77,7 @@ public class GsdStateMachineTests
             .ThrowsAsync(new InvalidOperationException("simulated failure"));
         var sut = BuildSut(checkpoints, [idleState]);
 
-        var ctx = await sut.RunAsync("owner", "repo", 1, CancellationToken.None);
+        var ctx = await sut.RunAsync("owner", "repo", 1, triageModeOnly: false, CancellationToken.None);
 
         Assert.Equal(WorkflowState.Failed, ctx.CurrentState);
         Assert.NotNull(ctx.FailureReason);
@@ -92,7 +92,7 @@ public class GsdStateMachineTests
         var sut = BuildSut(checkpoints, []);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.RunAsync("owner", "repo", 1, CancellationToken.None));
+            () => sut.RunAsync("owner", "repo", 1, triageModeOnly: false, CancellationToken.None));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class GsdStateMachineTests
         var analyzingState = MakeState(WorkflowState.Analyzing, WorkflowState.Done);
         var sut = BuildSut(checkpoints, [idleState, analyzingState]);
 
-        var ctx = await sut.RunAsync("owner", "repo", 5, CancellationToken.None);
+        var ctx = await sut.RunAsync("owner", "repo", 5, triageModeOnly: false, CancellationToken.None);
 
         Assert.Equal(WorkflowState.Done, ctx.CurrentState);
         // SaveAsync: before Idle (×1) + before Analyzing (×1) + final checkpoint (×1) = 3
@@ -173,6 +173,6 @@ public class GsdStateMachineTests
         var sut = BuildSut(checkpoints, [idleState]);
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => sut.RunAsync("owner", "repo", 1, cts.Token));
+            () => sut.RunAsync("owner", "repo", 1, triageModeOnly: false, cts.Token));
     }
 }

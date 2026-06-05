@@ -25,23 +25,30 @@ public sealed class GsdStateMachine
         _states = states.ToDictionary(s => s.State);
     }
 
-    /// <summary>Starts a new workflow for the given issue number.</summary>
-    public Task<GsdWorkflowContext> RunAsync(string owner, string repo, int issueNumber, CancellationToken ct)
+    /// <summary>Starts a new workflow with optional triage-only mode.</summary>
+    public Task<GsdWorkflowContext> RunAsync(string owner, string repo, int issueNumber, bool triageModeOnly, CancellationToken ct)
     {
         var ctx = new GsdWorkflowContext
         {
             Issue = new IssueContext(
                 Number: issueNumber,
-                Title: $"Issue #{issueNumber}",  // will be filled by IdleState
+                Title: $"Issue #{issueNumber}",
                 Body: "",
                 Labels: [],
                 RepoOwner: owner,
                 RepoName: repo,
                 DefaultBranch: "main"),
-            CurrentState = WorkflowState.Idle
+            CurrentState = WorkflowState.Idle,
+            TriageModeOnly = triageModeOnly
         };
         return ExecuteLoopAsync(ctx, ct);
     }
+
+    /// <summary>Returns the registered handler for the given state (used by --pr entry point).</summary>
+    public IWorkflowState GetState(WorkflowState state) =>
+        _states.TryGetValue(state, out var s)
+            ? s
+            : throw new InvalidOperationException($"No handler registered for state {state}");
 
     /// <summary>Resumes an interrupted workflow from its last checkpoint.</summary>
     public async Task<GsdWorkflowContext> ResumeAsync(string workflowId, CancellationToken ct)
@@ -86,7 +93,8 @@ public sealed class GsdStateMachine
                 _logger.LogWarning(
                     "Workflow {WorkflowId} cancelled at state {StateName} after {DurationMs}ms. IssueNumber={IssueNumber}",
                     ctx.WorkflowId, previousState, sw.ElapsedMilliseconds, ctx.Issue?.Number);
-                await _checkpoints.SaveAsync(ctx, ct);
+                // Use CancellationToken.None — the user-facing ct is already cancelled
+                await _checkpoints.SaveAsync(ctx, CancellationToken.None);
                 throw;
             }
             catch (Exception ex)
@@ -99,16 +107,17 @@ public sealed class GsdStateMachine
             }
         }
 
-        // Final checkpoint
-        await _checkpoints.SaveAsync(ctx, ct);
+        // Final checkpoint — use CancellationToken.None so a racing Ctrl+C
+        // does not lose the completed/failed state.
+        await _checkpoints.SaveAsync(ctx, CancellationToken.None);
 
         if (ctx.CurrentState == WorkflowState.Failed)
         {
-            await PostFailureCommentAsync(ctx, ct);
+            await PostFailureCommentAsync(ctx, CancellationToken.None);
         }
         else
         {
-            await _checkpoints.ArchiveAsync(ctx.WorkflowId, ct);
+            await _checkpoints.ArchiveAsync(ctx.WorkflowId, CancellationToken.None);
         }
 
         return ctx;

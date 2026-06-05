@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace GsdOrchestrator.Workflows.Models;
@@ -5,9 +6,11 @@ namespace GsdOrchestrator.Workflows.Models;
 public enum WorkflowState
 {
     Idle,
+    Triaging,      // Phase 13: issue classification before analysis
     Analyzing,
     Branching,
     Editing,
+    TestGenerating,   // Phase 14: generate xUnit tests for edited source files
     Validating,
     Committing,
     PrCreating,
@@ -54,6 +57,15 @@ public sealed record FileEdit(
 
 public sealed record EditContext(IReadOnlyList<FileEdit> Edits);
 
+public sealed record GeneratedTest(
+    string SourcePath,
+    string TestPath,
+    string TestSha,
+    bool WasSkipped,
+    string? SkipReason);
+
+public sealed record TestGenerationContext(IReadOnlyList<GeneratedTest> GeneratedTests);
+
 public sealed record GateResult(string Gate, ValidationStatus Status, string? Detail = null);
 
 public sealed record ValidationResult(
@@ -69,11 +81,45 @@ public sealed record PullRequestContext(
     string Title,
     string Body);
 
+// ── Phase 15: PR review loop models ─────────────────────────────────────────
+
+public sealed record ReviewComment(
+    string Path,
+    int Line,
+    string Side,
+    string Severity,
+    string Body);
+
+public sealed record ReviewResult(
+    string Verdict,
+    string Summary,
+    IReadOnlyList<ReviewComment> Comments);
+
+public sealed record PrReviewContext(
+    int PrNumber,
+    string Owner,
+    string Repo,
+    string Diff);
+
+public sealed record TriageResult(
+    string Classification,
+    string Reason,
+    int? DuplicateNumber);
+
 public sealed record StateTransitionEvent(
     WorkflowState From,
     WorkflowState To,
     DateTimeOffset OccurredAt,
     string? Detail = null);
+
+// ── Phase 16: Multi-repo configuration ──────────────────────────────────────
+
+/// <summary>Identifies a single repo to watch/process and its per-repo rate limit delay.</summary>
+public sealed record RepoConfig(
+    string Owner,
+    string Repo,
+    int RateLimitDelaySeconds = 30);
+
 
 // ── Root context ─────────────────────────────────────────────────────────────
 
@@ -87,10 +133,15 @@ public sealed record GsdWorkflowContext
     public ValidationResult? Validation { get; init; }
     public CommitContext? Commit { get; init; }
     public PullRequestContext? PullRequest { get; init; }
+    public TriageResult? Triage { get; init; }
+    public TestGenerationContext? TestGeneration { get; init; } // Phase 14
+    public ReviewResult? Review { get; init; }        // Phase 15
+    public PrReviewContext? PrReview { get; init; }   // Phase 15: --pr mode input
+    public bool TriageModeOnly { get; init; } = false;
     public WorkflowState CurrentState { get; init; } = WorkflowState.Idle;
     public int RetryCount { get; init; }
     public string? FailureReason { get; init; }
-    public List<StateTransitionEvent> History { get; init; } = [];
+    public IReadOnlyList<StateTransitionEvent> History { get; init; } = [];
 
     public GsdWorkflowContext Transition(WorkflowState to, string? detail = null) =>
         this with

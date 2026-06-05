@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Nodes;
 using GsdOrchestrator.Mcp;
 using GsdOrchestrator.Workflows.Models;
@@ -105,14 +106,73 @@ public sealed class ValidatingState : IWorkflowState
                 e.Path.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
                 e.Path.Contains("Spec", StringComparison.OrdinalIgnoreCase));
 
-            if (!hasTestFiles)
+            // Phase 14: also satisfied if TestGeneratingState produced non-skipped test files
+            var hasGeneratedTests = ctx.TestGeneration?.GeneratedTests.Any(t => !t.WasSkipped) == true;
+
+            if (!hasTestFiles && !hasGeneratedTests)
             {
-                _logger.LogWarning("Plan required tests but no test files were modified");
-                gates.Add(new GateResult("TestIntent", ValidationStatus.Warn, "No test files modified"));
+                _logger.LogWarning("Plan required tests but no test files were modified or generated");
+                gates.Add(new GateResult("TestIntent", ValidationStatus.Warn, "No test files modified or generated"));
             }
             else
             {
                 gates.Add(new GateResult("TestIntent", ValidationStatus.Pass));
+            }
+        }
+
+        // Gate 5: Test compilation check (structural — file exists + contains test attributes)
+        if (ctx.TestGeneration is not null && ctx.TestGeneration.GeneratedTests.Count > 0)
+        {
+            var nonSkipped = ctx.TestGeneration.GeneratedTests
+                .Where(t => !t.WasSkipped)
+                .ToList();
+
+            if (nonSkipped.Count > 0)
+            {
+                var testCompilationPassed = true;
+                foreach (var generatedTest in nonSkipped)
+                {
+                    try
+                    {
+                        var fileResult = await _mcp.CallAsync("get_file_contents", new JsonObject
+                        {
+                            ["owner"] = issue.RepoOwner,
+                            ["repo"] = issue.RepoName,
+                            ["path"] = generatedTest.TestPath,
+                            ["ref"] = branch.BranchName
+                        }, ct);
+
+                        var fileJson = fileResult.ParseInnerJson();
+                        var b64 = fileJson?["content"]?.GetValue<string>()?.Replace("\n", "") ?? "";
+                        var content = b64.Length > 0
+                            ? Encoding.UTF8.GetString(Convert.FromBase64String(b64))
+                            : "";
+
+                        bool hasTestAttribute =
+                            content.Contains("[Fact]", StringComparison.Ordinal) ||
+                            content.Contains("[Theory]", StringComparison.Ordinal);
+
+                        if (!hasTestAttribute)
+                        {
+                            _logger.LogWarning("Test file {Path} has no [Fact] or [Theory] attributes", generatedTest.TestPath);
+                            testCompilationPassed = false;
+                        }
+                    }
+                    catch (McpException ex)
+                    {
+                        _logger.LogWarning(ex, "Test file {Path} not found on branch", generatedTest.TestPath);
+                        testCompilationPassed = false;
+                    }
+                }
+
+                gates.Add(new GateResult("TestCompilation",
+                    testCompilationPassed ? ValidationStatus.Pass : ValidationStatus.Warn,
+                    testCompilationPassed ? null : "One or more test files missing or structurally invalid"));
+            }
+            else
+            {
+                // All tests were skipped — pass silently
+                gates.Add(new GateResult("TestCompilation", ValidationStatus.Pass, "All test files skipped"));
             }
         }
 

@@ -12,31 +12,31 @@
 
 ### gsd-orchestrator (GSD)
 
-- [ ] **GSD-01**: GitHub Actions CI workflow (.NET 10 build) with passing badge in README
-- [ ] **GSD-02**: Mermaid state machine diagram in README (full workflow: Idle→Done)
-- [ ] **GSD-03**: Mermaid component diagram in README (orchestrator ↔ MCP server ↔ Claude)
-- [ ] **GSD-04**: GitHub Wiki — Home page with overview and navigation
-- [ ] **GSD-05**: GitHub Wiki — Setup Guide (prerequisites, clone, .env, first run)
-- [ ] **GSD-06**: GitHub Wiki — Architecture deep-dive (state machine, components, data flow)
-- [ ] **GSD-07**: GitHub Wiki — Configuration Reference (all env vars)
-- [ ] **GSD-08**: GitHub Release v1.0.0 with changelog
-- [ ] **GSD-09**: README badges: CI, .NET 10, License
+- [x] **GSD-01**: GitHub Actions CI workflow (.NET 10 build) with passing badge in README — Phase 2 ✓
+- [x] **GSD-02**: Mermaid state machine diagram in README (full workflow: Idle→Done) — Phase 2 ✓
+- [x] **GSD-03**: Mermaid component diagram in README (orchestrator ↔ MCP server ↔ Claude) — Phase 2 ✓
+- [x] **GSD-04**: GitHub Wiki — Home page with overview and navigation — Phase 3 (03-01) ✓
+- [x] **GSD-05**: GitHub Wiki — Setup Guide (prerequisites, clone, .env, first run) — Phase 3 (03-01) ✓
+- [x] **GSD-06**: GitHub Wiki — Architecture deep-dive (state machine, components, data flow) — Phase 3 (03-01) ✓
+- [x] **GSD-07**: GitHub Wiki — Configuration Reference (all env vars) — Phase 3 (03-01) ✓
+- [x] **GSD-08**: GitHub Release v1.0.0 with feature-narrative release notes — Phase 3 (03-02) ✓
+- [x] **GSD-09**: README badges: CI, .NET 10, License — Phase 2 ✓
 
 ### Promptimprover (PI)
 
-- [ ] **PI-01**: README rewritten — remove internal language, add hero line, architecture section
-- [ ] **PI-02**: GitHub Actions CI workflow (TypeScript/Node build) with passing badge
-- [ ] **PI-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference
-- [ ] **PI-04**: README badges: CI, Node, License
-- [ ] **PI-05**: Cross-repo links to org and sibling projects
+- [x] **PI-01**: README rewritten — remove internal language, add hero line, architecture section — Phase 4 ✓
+- [x] **PI-02**: GitHub Actions CI workflow (TypeScript/Node build) with passing badge — Phase 4 ✓
+- [x] **PI-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference — Phase 4 ✓
+- [x] **PI-04**: README badges: CI, Node, License — Phase 4 ✓
+- [x] **PI-05**: Cross-repo links to org and sibling projects — Phase 4 ✓
 
 ### autogen (AG)
 
-- [ ] **AG-01**: README rewritten — remove "starter kit" framing, add enterprise positioning
-- [ ] **AG-02**: GitHub Actions CI workflow (Python build) with passing badge
-- [ ] **AG-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference
-- [ ] **AG-04**: README badges: CI, Python, License
-- [ ] **AG-05**: Cross-repo links to org and sibling projects
+- [x] **AG-01**: README rewritten — remove "starter kit" framing, add enterprise positioning — Phase 5 ✓
+- [x] **AG-02**: GitHub Actions CI workflow (Python build) with passing badge — Phase 5 ✓
+- [x] **AG-03**: GitHub Wiki — Home, Setup Guide, Architecture, Configuration Reference — Phase 5 ✓
+- [x] **AG-04**: README badges: CI, Python, License — Phase 5 ✓
+- [x] **AG-05**: Cross-repo links to org and sibling projects — Phase 5 ✓
 
 ### Portfolio Coherence (COH)
 
@@ -44,7 +44,71 @@
 - [ ] **COH-02**: All three repo READMEs include "Part of Coding-Autopilot-System" badge/link
 - [ ] **COH-03**: Org profile updated with system interaction diagram showing all three projects
 
-## v2 Requirements (Deferred)
+## v2 Requirements — Milestone 2.0 (Full Org Documentation)
+
+### ci-autopilot Emergency Fix (CIAP)
+
+- [ ] **CIAP-01**: Disable/fix runner-health.yml runaway cron (currently `*/15 * * * *` checking offline self-hosted runner)
+- [ ] **CIAP-02**: Bulk-close all 1,964+ open `runner-offline` issues via GitHub API
+- [ ] **CIAP-03**: ci-autopilot Level A docs — README rewrite (AI agent automation framing), CI badge, wiki 4 pages, GitHub topics, cross-links to org
+
+### CAS Secondary Repos (ACOR)
+
+- [ ] **ACOR-01**: autopilot-core Level A docs — README rewrite, CI badge, wiki 4 pages, topics, cross-links
+- [ ] **ACOR-02**: autopilot-demo Level A docs — README rewrite, CI badge, wiki 4 pages, topics, cross-links
+- [ ] **CSEC-01**: cloud-security-service-model documentation — README rewrite (framework/methodology framing), wiki 4 pages, topics
+
+### OgeonX-Ai Core Tech (TECH)
+
+- [ ] **TECH-01**: enterprise-ai-gateway AI engineer reframe — README hero line, architecture diagram, wiki 4 pages, CI badge, cross-links to CAS
+- [ ] **TECH-02**: android AI engineer reframe — scan codebase, README (Android + AI integration framing), wiki 4 pages, CI badge
+
+### OgeonX-Ai Portfolio Repos (PORT)
+
+- [x] **PORT-01**: kim-ai-voice-demo AI engineer reframe — README rewrite (away from ElevenLabs demo framing), wiki 4 pages, topics — Phase 10 ✓
+- [x] **PORT-02**: My-CV reframe — README as AI-powered career tool, wiki 4 pages, topics — Phase 10 ✓
+
+### Cross-Portfolio Coherence (COHER)
+
+- [x] **COHER-01**: GitHub topics audit — all repos have 5-10 accurate, discoverable topics — Phase 11 ✓
+- [x] **COHER-02**: Org pinned repos — manual instructions delivered (no programmatic API; org owner action required) — Phase 11 ✓
+- [x] **COHER-03**: Issue templates — `bug_report.md` and `feature_request.md` in gsd-orchestrator, Promptimprover, autogen — Phase 11 ✓
+
+## v3 Requirements — Milestone 3.0 (gsd-orchestrator Feature Expansion)
+
+### Robustness Foundation (ROB)
+
+- [x] **ROB-01**: Serilog structured logging integrated — all state transitions, errors, and Claude calls emit structured log events — Phase 12 (12-01) ✓
+- [x] **ROB-02**: xUnit test project added with >= 20% coverage on GsdStateMachine and McpStdioClient — Phase 12 (12-03) ✓
+- [x] **ROB-03**: Polly circuit breaker added for MCP tool calls (complements existing retry policy) — Phase 12 (12-02) ✓
+
+### Smarter Issue Triage (TRIAGE)
+
+- [ ] **TRIAGE-01**: `TriagingState` implemented — classifies issue via Claude (actionable / needs-info / duplicate / out-of-scope)
+- [ ] **TRIAGE-02**: Duplicate detection — checks open issues and PRs for similar titles before proceeding
+- [ ] **TRIAGE-03**: `--triage` operating mode — runs triage only, posts classification comment, no code changes
+- [ ] **TRIAGE-04**: Skip logic — issues classified as out-of-scope or duplicate are closed/labelled with comment, workflow exits cleanly
+
+### Autonomous Test Generation (TESTGEN)
+
+- [ ] **TESTGEN-01**: `TestGeneratingState` implemented — Claude generates xUnit tests for files changed in EditingState
+- [ ] **TESTGEN-02**: Generated tests committed to feature branch alongside code changes
+- [ ] **TESTGEN-03**: `ValidatingState` enhanced — checks test file compilation (not runtime pass/fail)
+
+### PR Review Loop (REV)
+
+- [x] **REV-01**: `--pr <N>` operating mode — triggers PR review workflow on a specific PR number
+- [x] **REV-02**: `ReviewingState` enhanced — reads PR diff, Claude produces structured review (issues list with file/line/severity/message)
+- [x] **REV-03**: Review comments posted as inline PR comments via GitHub MCP; approve or request-changes action submitted
+
+### Multi-Repo Support (MULTI)
+
+- [x] **MULTI-01**: `GSD_REPOS` environment variable (JSON array of `{owner, repo}` objects) — replaces single `GSD_GITHUB_OWNER`/`GSD_GITHUB_REPO`
+- [x] **MULTI-02**: `--watch` mode iterates across all configured repos in sequence
+- [x] **MULTI-03**: Checkpointing scoped per repo (`checkpoints/{owner}_{repo}/`)
+- [x] **MULTI-04**: Configurable inter-repo delay (`GSD_REPO_DELAY_SECONDS`) to avoid API rate limits
+
+## v1 Deferred (still out of scope for v2)
 
 - Test suites for gsd-orchestrator, Promptimprover, autogen
 - GitHub Projects board showing roadmap
@@ -68,3 +132,8 @@
 | PI-01–05 | Phase 4 |
 | AG-01–05 | Phase 5 |
 | COH-01–03 | Phase 6 |
+| CIAP-01–03 | Phase 7 |
+| ACOR-01–02, CSEC-01 | Phase 8 |
+| TECH-01–02 | Phase 9 |
+| PORT-01–02 | Phase 10 |
+| COHER-01–03 | Phase 11 |

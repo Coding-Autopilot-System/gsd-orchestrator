@@ -1,4 +1,17 @@
-# Enterprise GitHub Portfolio
+# Enterprise GitHub Portfolio + gsd-orchestrator
+
+## Current Milestone: v3.0 — gsd-orchestrator Feature Expansion
+
+**Goal:** Extend gsd-orchestrator from a single-repo issue-to-PR automator into a multi-repo, triage-aware, test-generating autonomous engineering platform.
+
+**Target features:**
+- Robustness foundation (Serilog, xUnit, circuit breaker)
+- Smarter issue triage (TriagingState, --triage mode, duplicate detection)
+- Autonomous test generation (TestGeneratingState, xUnit tests on branch)
+- PR review loop (--pr mode, structured inline comments, approve/request-changes)
+- Multi-repo support (GSD_REPOS config, per-repo checkpointing)
+
+---
 
 ## What This Is
 
@@ -69,16 +82,17 @@ A hiring manager should be able to spend 5 minutes on the GitHub org and immedia
 
 - [ ] All repos have correct GitHub topics for discoverability
 - [ ] Org .github profile README showcases all three projects as a system
-- [ ] gsd-orchestrator has GitHub Actions CI (.NET build)
-- [ ] gsd-orchestrator has Mermaid architecture diagram in README
-- [ ] gsd-orchestrator has GitHub Wiki (4+ pages)
-- [ ] gsd-orchestrator has v1.0.0 release
-- [ ] Promptimprover has updated README and GitHub Actions CI
-- [ ] Promptimprover has GitHub Wiki
-- [ ] autogen has updated README and GitHub Actions CI
-- [ ] autogen has GitHub Wiki
+- [x] gsd-orchestrator has GitHub Actions CI (.NET build) — Validated in Phase 2: CI green, badge live
+- [x] gsd-orchestrator has Mermaid architecture diagram in README — Validated in Phase 2: stateDiagram-v2 + flowchart LR
+- [x] gsd-orchestrator has GitHub Wiki (4+ pages) — Validated in Phase 3: Home, Setup Guide, Architecture, Configuration Reference live
+- [x] gsd-orchestrator has v1.0.0 release — Validated in Phase 3: feature-narrative release notes, not draft/pre-release
+- [x] Promptimprover has updated README and GitHub Actions CI — Validated in Phase 4: hero line, badges, Mermaid diagram, CI green
+- [x] Promptimprover has GitHub Wiki — Validated in Phase 4: Home, Setup Guide, Architecture, Configuration Reference live
+- [x] autogen has updated README and GitHub Actions CI — Validated in Phase 5: enterprise hero line, CI green (Python 3.12)
+- [x] autogen has GitHub Wiki — Validated in Phase 5: Home, Setup Guide, Architecture, Configuration Reference live
 - [ ] Personal OgeonX-Ai profile README links to org and highlights top projects
-- [ ] All READMEs have CI/version badges
+- [x] gsd-orchestrator README has CI / .NET 10 / License badges — Validated in Phase 2
+- [x] Promptimprover and autogen READMEs have CI/version badges — Validated in Phases 4 and 5
 
 ### Out of Scope
 
@@ -100,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-05-21 after initialization*
+*Last updated: 2026-06-05 — MILESTONE 3.0 COMPLETE. Phase 16 (Multi-Repo Support): GSD_REPOS JSON array replaces single owner/repo env vars (backwards compat); watch mode loops all repos with per-repo rate-limit delay; checkpoints namespaced {owner}_{repo}_{workflowId}.json; IdleState DI cleaned up. 35 tests green. All 5 phases (12–16) and 13 v3 requirements satisfied.*
