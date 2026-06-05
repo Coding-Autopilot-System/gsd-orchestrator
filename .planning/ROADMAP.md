@@ -388,11 +388,11 @@ Plans:
 
 **Requirements:** REV-01, REV-02, REV-03
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 15-01-PLAN.md — Extend WorkflowModels with PR-review contracts (ReviewComment, ReviewResult, PrReviewContext); 7 RED test stubs (REV-01, REV-02) [Wave 1]
-- [ ] 15-02-PLAN.md — Implement PR-review-loop ReviewingState + --pr flag in Program.cs; all 28 tests GREEN (REV-01, REV-02, REV-03) [Wave 2]
+- [x] 15-02-PLAN.md — Implement PR-review-loop ReviewingState + --pr flag in Program.cs; all 28 tests GREEN (REV-01, REV-02, REV-03) [Wave 2]
 
 **Success Criteria:**
 - `--pr <N>` mode reads diff, invokes Claude, posts inline comments with severity
