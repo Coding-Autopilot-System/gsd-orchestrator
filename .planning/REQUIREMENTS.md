@@ -103,10 +103,10 @@
 
 ### Multi-Repo Support (MULTI)
 
-- [ ] **MULTI-01**: `GSD_REPOS` environment variable (JSON array of `{owner, repo}` objects) — replaces single `GSD_GITHUB_OWNER`/`GSD_GITHUB_REPO`
-- [ ] **MULTI-02**: `--watch` mode iterates across all configured repos in sequence
-- [ ] **MULTI-03**: Checkpointing scoped per repo (`checkpoints/{owner}_{repo}/`)
-- [ ] **MULTI-04**: Configurable inter-repo delay (`GSD_REPO_DELAY_SECONDS`) to avoid API rate limits
+- [x] **MULTI-01**: `GSD_REPOS` environment variable (JSON array of `{owner, repo}` objects) — replaces single `GSD_GITHUB_OWNER`/`GSD_GITHUB_REPO`
+- [x] **MULTI-02**: `--watch` mode iterates across all configured repos in sequence
+- [x] **MULTI-03**: Checkpointing scoped per repo (`checkpoints/{owner}_{repo}/`)
+- [x] **MULTI-04**: Configurable inter-repo delay (`GSD_REPO_DELAY_SECONDS`) to avoid API rate limits
 
 ## v1 Deferred (still out of scope for v2)
 
