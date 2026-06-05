@@ -36,7 +36,7 @@ public sealed class FileCheckpointStore : ICheckpointStore
 
     public async Task SaveAsync(GsdWorkflowContext ctx, CancellationToken ct = default)
     {
-        var path = StatePath(ctx.WorkflowId);
+        var path = StatePath(ctx.Issue?.RepoOwner ?? "", ctx.Issue?.RepoName ?? "", ctx.WorkflowId);
         var tmp = path + ".tmp";
 
         await using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -80,4 +80,13 @@ public sealed class FileCheckpointStore : ICheckpointStore
 
     private string StatePath(string workflowId) =>
         Path.Combine(_stateDir, $"{workflowId}.json");
+
+    /// <summary>Per-repo namespaced path — MULTI-03. New saves include owner+repo prefix.</summary>
+    private string StatePath(string owner, string repo, string workflowId)
+    {
+        var prefix = (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
+            ? workflowId
+            : $"{owner}_{repo}_{workflowId}";
+        return Path.Combine(_stateDir, $"{prefix}.json");
+    }
 }
