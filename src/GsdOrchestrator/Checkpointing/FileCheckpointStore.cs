@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using GsdOrchestrator.Workflows.Models;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,7 @@ public interface ICheckpointStore
 public sealed class FileCheckpointStore : ICheckpointStore
 {
     private readonly string _stateDir;
+    private readonly string _archiveDir;
     private readonly ILogger<FileCheckpointStore> _logger;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
@@ -27,9 +29,20 @@ public sealed class FileCheckpointStore : ICheckpointStore
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>
+    /// CR-02/T-16-05: Allowlist-based sanitizer — only alphanumerics, hyphens, and underscores.
+    /// Replaces every other character with '_' to prevent path traversal.
+    /// </summary>
+    private static readonly Regex SafeSegment =
+        new(@"[^a-zA-Z0-9\-_]", RegexOptions.Compiled);
+
+    private static string Sanitize(string segment) =>
+        SafeSegment.Replace(segment, "_");
+
     public FileCheckpointStore(string repoRoot, ILogger<FileCheckpointStore> logger)
     {
-        _stateDir = Path.Combine(repoRoot, ".gsd", "state");
+        _stateDir   = Path.Combine(repoRoot, ".gsd", "state");
+        _archiveDir = Path.GetFullPath(Path.Combine(repoRoot, ".gsd", "archive"));
         _logger = logger;
         Directory.CreateDirectory(_stateDir);
     }
@@ -47,13 +60,30 @@ public sealed class FileCheckpointStore : ICheckpointStore
         _logger.LogDebug("Checkpoint saved: {WorkflowId} → {State}", ctx.WorkflowId, ctx.CurrentState);
     }
 
+    /// <summary>
+    /// CR-03: Try exact (legacy) path first, then scan for namespaced *_{workflowId}.json.
+    /// This allows resuming workflows saved after Phase 16 namespacing was introduced.
+    /// </summary>
     public async Task<GsdWorkflowContext?> LoadAsync(string workflowId, CancellationToken ct = default)
     {
-        var path = StatePath(workflowId);
-        if (!File.Exists(path)) return null;
+        // Try exact match first (legacy / no-owner-repo path)
+        var exactPath = StatePath(workflowId);
+        if (File.Exists(exactPath))
+        {
+            await using var fs = new FileStream(exactPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs, JsonOpts, ct);
+        }
 
-        await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs, JsonOpts, ct);
+        // Try namespaced match: *_{sanitizedWorkflowId}.json
+        var sanitized = Sanitize(workflowId);
+        var candidates = Directory.GetFiles(_stateDir, $"*_{sanitized}.json");
+        if (candidates.Length == 1)
+        {
+            await using var fs2 = new FileStream(candidates[0], FileMode.Open, FileAccess.Read, FileShare.Read);
+            return await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs2, JsonOpts, ct);
+        }
+
+        return null;
     }
 
     public Task<IReadOnlyList<string>> ListActiveWorkflowsAsync(CancellationToken ct = default)
@@ -67,33 +97,41 @@ public sealed class FileCheckpointStore : ICheckpointStore
         return Task.FromResult<IReadOnlyList<string>>(ids);
     }
 
+    /// <summary>
+    /// CR-03: Try exact path first, then scan for namespaced *_{workflowId}.json.
+    /// WR-03: Uses _archiveDir computed once in the constructor.
+    /// </summary>
     public Task ArchiveAsync(string workflowId, CancellationToken ct = default)
     {
+        // Try exact match first
         var src = StatePath(workflowId);
-        if (!File.Exists(src)) return Task.CompletedTask;
+        if (!File.Exists(src))
+        {
+            // Try namespaced match
+            var sanitized = Sanitize(workflowId);
+            var candidates = Directory.GetFiles(_stateDir, $"*_{sanitized}.json");
+            if (candidates.Length == 1)
+                src = candidates[0];
+            else
+                return Task.CompletedTask;
+        }
 
-        var archiveDir = Path.Combine(_stateDir, "..", "archive");
-        Directory.CreateDirectory(archiveDir);
-        File.Move(src, Path.Combine(archiveDir, $"{workflowId}.json"), overwrite: true);
+        Directory.CreateDirectory(_archiveDir);
+        var destName = Path.GetFileName(src);
+        File.Move(src, Path.Combine(_archiveDir, destName), overwrite: true);
         return Task.CompletedTask;
     }
 
+    /// <summary>CR-01: Sanitize workflowId to prevent path traversal.</summary>
     private string StatePath(string workflowId) =>
-        Path.Combine(_stateDir, $"{workflowId}.json");
+        Path.Combine(_stateDir, $"{Sanitize(workflowId)}.json");
 
     /// <summary>Per-repo namespaced path — MULTI-03. New saves include owner+repo prefix.</summary>
     private string StatePath(string owner, string repo, string workflowId)
     {
         var prefix = (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
-            ? workflowId
-            : $"{Sanitize(owner)}_{Sanitize(repo)}_{workflowId}";
+            ? Sanitize(workflowId)
+            : $"{Sanitize(owner)}_{Sanitize(repo)}_{Sanitize(workflowId)}";
         return Path.Combine(_stateDir, $"{prefix}.json");
     }
-
-    /// <summary>
-    /// T-16-05: Sanitize owner/repo by replacing path-traversal characters with underscores.
-    /// Prevents a crafted GSD_REPOS value from writing checkpoint files outside _stateDir.
-    /// </summary>
-    private static string Sanitize(string segment) =>
-        segment.Replace('/', '_').Replace('\\', '_').Replace("..", "__");
 }
