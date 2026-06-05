@@ -129,12 +129,19 @@ public sealed class ReviewingState : IWorkflowState
             - Respond ONLY with the JSON object — no prose before or after
             """;
 
+        // Truncate diff to a safe maximum before injecting into the LLM prompt
+        // to guard against context-window exhaustion and prompt injection via large diffs.
+        const int MaxDiffLength = 40_000; // ~10k tokens
+        var safeDiff = prCtx.Diff.Length > MaxDiffLength
+            ? prCtx.Diff[..MaxDiffLength] + "\n\n[diff truncated — too large]"
+            : prCtx.Diff;
+
         var userPrompt = $$"""
             PR #{{prCtx.PrNumber}}: {{prMeta.title}}
             {{(prMeta.body.Length > 0 ? $"\nDescription:\n{prMeta.body}\n" : "")}}
             Diff:
             ```diff
-            {{prCtx.Diff}}
+            {{safeDiff}}
             ```
             """;
 
