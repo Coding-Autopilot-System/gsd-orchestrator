@@ -86,7 +86,14 @@ public sealed class FileCheckpointStore : ICheckpointStore
     {
         var prefix = (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
             ? workflowId
-            : $"{owner}_{repo}_{workflowId}";
+            : $"{Sanitize(owner)}_{Sanitize(repo)}_{workflowId}";
         return Path.Combine(_stateDir, $"{prefix}.json");
     }
+
+    /// <summary>
+    /// T-16-05: Sanitize owner/repo by replacing path-traversal characters with underscores.
+    /// Prevents a crafted GSD_REPOS value from writing checkpoint files outside _stateDir.
+    /// </summary>
+    private static string Sanitize(string segment) =>
+        segment.Replace('/', '_').Replace('\\', '_').Replace("..", "__");
 }
