@@ -258,10 +258,15 @@ public sealed class ReviewingState : IWorkflowState
     private async Task<GsdWorkflowContext> ExecuteIssueModeAsync(
         GsdWorkflowContext ctx, CancellationToken ct)
     {
-        var issue = ctx.Issue!;
-        var pr = ctx.PullRequest!;
-        var plan = ctx.Plan!;
-        var edits = ctx.Edits!;
+        if (ctx.Issue is null || ctx.PullRequest is null || ctx.Plan is null || ctx.Edits is null)
+            throw new InvalidOperationException(
+                "ReviewingState (issue mode) requires Issue, PullRequest, Plan, and Edits " +
+                "to all be set in the context. Current state may have been reached incorrectly.");
+
+        var issue = ctx.Issue;
+        var pr = ctx.PullRequest;
+        var plan = ctx.Plan;
+        var edits = ctx.Edits;
 
         var comment = await GenerateReviewCommentAsync(issue, plan, edits, pr, ct);
 
