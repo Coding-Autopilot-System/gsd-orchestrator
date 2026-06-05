@@ -97,9 +97,9 @@
 
 ### PR Review Loop (REV)
 
-- [ ] **REV-01**: `--pr <N>` operating mode — triggers PR review workflow on a specific PR number
-- [ ] **REV-02**: `ReviewingState` enhanced — reads PR diff, Claude produces structured review (issues list with file/line/severity/message)
-- [ ] **REV-03**: Review comments posted as inline PR comments via GitHub MCP; approve or request-changes action submitted
+- [x] **REV-01**: `--pr <N>` operating mode — triggers PR review workflow on a specific PR number
+- [x] **REV-02**: `ReviewingState` enhanced — reads PR diff, Claude produces structured review (issues list with file/line/severity/message)
+- [x] **REV-03**: Review comments posted as inline PR comments via GitHub MCP; approve or request-changes action submitted
 
 ### Multi-Repo Support (MULTI)
 
