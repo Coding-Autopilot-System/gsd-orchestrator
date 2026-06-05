@@ -114,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 2. Core Value check — still the right priority?
 
 ---
-*Last updated: 2026-06-02 — Phase 13 complete. TriagingState added — LLM-powered issue classification (actionable/needs-info/duplicate/out-of-scope) now runs before full planning. 14 tests green. Phase 14 (Autonomous Test Generation) is next.*
+*Last updated: 2026-06-05 — Phase 15 complete. ReviewingState dual-mode impl — `--pr <N>` reads PR diff, invokes Claude LLM (3-attempt retry), posts inline comments with severity, submits APPROVE/REQUEST_CHANGES via GitHub MCP. Legacy --issue path preserved (REV-03). 28 tests green. Phase 16 (Multi-Repo Support) is next.*
