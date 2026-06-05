@@ -81,6 +81,12 @@ public sealed class ReviewingState : IWorkflowState
                 ["pullNumber"] = prCtx.PrNumber
             }, ct);
 
+            if (result.IsError)
+            {
+                _logger.LogWarning("get_pull_request returned error: {Text}", result.Text);
+                return ($"PR #{prCtx.PrNumber}", "");
+            }
+
             var json = result.ParseInnerJson();
             var title = json?["title"]?.GetValue<string>() ?? $"PR #{prCtx.PrNumber}";
             var body = json?["body"]?.GetValue<string>() ?? "";
@@ -242,7 +248,7 @@ public sealed class ReviewingState : IWorkflowState
 
         var reviewBody = $"**GSD Orchestrator automated review**\n\n{reviewResult.Summary}";
 
-        await _mcp.CallAsync("create_pull_request_review", new JsonObject
+        var submitResult = await _mcp.CallAsync("create_pull_request_review", new JsonObject
         {
             ["owner"] = prCtx.Owner,
             ["repo"] = prCtx.Repo,
@@ -251,6 +257,10 @@ public sealed class ReviewingState : IWorkflowState
             ["event"] = reviewResult.Verdict,
             ["comments"] = commentsArray
         }, ct);
+
+        if (submitResult.IsError)
+            throw new McpException(
+                $"create_pull_request_review failed: {submitResult.Text}", isTransient: false);
     }
 
     // ── MODE B: --issue post-PR comment (legacy — REV-03) ────────────────────

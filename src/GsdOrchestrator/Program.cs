@@ -261,6 +261,9 @@ static async Task<GsdWorkflowContext> RunPrReviewAsync(
             ["pullNumber"] = prNumber
         }, ct);
 
+        if (diffResult.IsError)
+            throw new InvalidOperationException($"GitHub MCP error fetching PR: {diffResult.Text}");
+
         // get_pull_request returns PR metadata JSON; treat the full JSON payload as the
         // diff context for the LLM prompt (ReviewingState uses ctx.PrReview.Diff directly).
         diff = diffResult.Text;
