@@ -57,7 +57,7 @@ public class MultiRepoConfigTests
     {
         var config = BuildConfig(new());
         // throws NotImplementedException from stub (RED — will become InvalidOperationException in GREEN)
-        Assert.ThrowsAny<Exception>(() => RepoConfigLoader.Load(config));
+        Assert.Throws<InvalidOperationException>(() => RepoConfigLoader.Load(config));
     }
 
     // ── Test 4: MULTI-04 — rateLimitDelaySeconds defaults to 30 ─────────────
@@ -98,7 +98,7 @@ public class MultiRepoConfigTests
             ["GSD_REPOS"] = "not-valid-json"
         });
         // throws NotImplementedException from stub (RED — will become JsonException in GREEN)
-        Assert.ThrowsAny<Exception>(() => RepoConfigLoader.Load(config));
+        Assert.Throws<System.Text.Json.JsonException>(() => RepoConfigLoader.Load(config));
     }
 
     // ── Test 7: MULTI-03 — StatePath namespaces checkpoint file ─── (GREEN)
