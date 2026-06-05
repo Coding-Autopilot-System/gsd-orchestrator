@@ -25,24 +25,6 @@ public sealed class GsdStateMachine
         _states = states.ToDictionary(s => s.State);
     }
 
-    /// <summary>Starts a new workflow for the given issue number.</summary>
-    public Task<GsdWorkflowContext> RunAsync(string owner, string repo, int issueNumber, CancellationToken ct)
-    {
-        var ctx = new GsdWorkflowContext
-        {
-            Issue = new IssueContext(
-                Number: issueNumber,
-                Title: $"Issue #{issueNumber}",  // will be filled by IdleState
-                Body: "",
-                Labels: [],
-                RepoOwner: owner,
-                RepoName: repo,
-                DefaultBranch: "main"),
-            CurrentState = WorkflowState.Idle
-        };
-        return ExecuteLoopAsync(ctx, ct);
-    }
-
     /// <summary>Starts a new workflow with optional triage-only mode.</summary>
     public Task<GsdWorkflowContext> RunAsync(string owner, string repo, int issueNumber, bool triageModeOnly, CancellationToken ct)
     {
