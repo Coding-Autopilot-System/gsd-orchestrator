@@ -139,7 +139,7 @@ public class ReviewingStateTests
         Assert.Equal(WorkflowState.Done, result.CurrentState);
     }
 
-    // ── Test 2: REV-01 — REQUEST_CHANGES verdict transitions to Done ─────────
+    // ── Test 2: REV-02 — REQUEST_CHANGES verdict transitions to Done ─────────
     [Fact]
     public async Task ExecuteAsync_RequestChangesVerdict_TransitionsToDone()
     {
