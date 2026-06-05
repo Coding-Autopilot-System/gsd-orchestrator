@@ -170,6 +170,10 @@ public sealed class ReviewingState : IWorkflowState
                     _logger.LogInformation("LLM attempt {Attempt}/{Max}: parsed verdict={Verdict}",
                         attempt, MaxLlmAttempts, reviewResult.Verdict);
             }
+            catch (OperationCanceledException)
+            {
+                throw; // Do not retry on cancellation
+            }
             catch (Exception ex)
             {
                 lastException = ex;
