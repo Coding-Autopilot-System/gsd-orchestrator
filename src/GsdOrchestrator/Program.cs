@@ -18,6 +18,7 @@ DotEnv.Load(options: new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 4
 
 // ── Simple args parsing ──────────────────────────────────────────────────
 int? issueNumber = null;
+int? prNumber = null;     // --pr mode
 string? resumeId = null;
 bool watchMode = false;
 bool triageModeOnly = false;
@@ -28,6 +29,7 @@ for (int i = 0; i < args.Length; i++)
     if (args[i] == "--resume" && i + 1 < args.Length) resumeId = args[i + 1];
     if (args[i] == "--watch") watchMode = true;
     if (args[i] == "--triage") triageModeOnly = true;
+    if (args[i] == "--pr" && i + 1 < args.Length && int.TryParse(args[i + 1], out var pn)) prNumber = pn;
 }
 
 if (triageModeOnly && issueNumber is null)
@@ -36,11 +38,12 @@ if (triageModeOnly && issueNumber is null)
     Environment.Exit(1);
 }
 
-if (issueNumber is null && resumeId is null && !watchMode)
+if (issueNumber is null && resumeId is null && !watchMode && prNumber is null)
 {
     Console.Error.WriteLine("Usage:");
     Console.Error.WriteLine("  dotnet run -- --issue <number>               Run workflow for a specific issue");
     Console.Error.WriteLine("  dotnet run -- --issue <number> --triage      Classify issue only (no code changes)");
+    Console.Error.WriteLine("  dotnet run -- --pr <number>                  Review an open PR with Claude");
     Console.Error.WriteLine("  dotnet run -- --resume <workflow-id>         Resume an interrupted workflow");
     Console.Error.WriteLine("  dotnet run -- --watch                        Poll open issues and process them automatically");
     Environment.Exit(1);
@@ -154,6 +157,11 @@ if (watchMode)
 {
     await RunWatchModeAsync(sm, mcpDispatcher, owner, repo, logger, cts.Token);
 }
+else if (prNumber is not null)
+{
+    var result = await RunPrReviewAsync(sm, mcpDispatcher, owner, repo, prNumber.Value, logger, cts.Token);
+    PrintPrReviewResult(result);
+}
 else if (resumeId is not null)
 {
     var result = await sm.ResumeAsync(resumeId, cts.Token);
@@ -231,6 +239,68 @@ static async Task RunWatchModeAsync(
     }
 
     logger.LogInformation("Watch mode stopped");
+}
+
+// ── PR review mode ──────────────────────────────────────────────────────────────
+static async Task<GsdWorkflowContext> RunPrReviewAsync(
+    GsdStateMachine sm,
+    McpToolDispatcher mcpDispatcher,
+    string owner, string repo, int prNumber,
+    ILogger<Program> logger, CancellationToken ct)
+{
+    logger.LogInformation("Starting PR review for {Owner}/{Repo}#{PrNumber}", owner, repo, prNumber);
+
+    // Fetch the PR diff/metadata via MCP before building the context
+    string diff;
+    try
+    {
+        var diffResult = await mcpDispatcher.CallAsync("get_pull_request", new System.Text.Json.Nodes.JsonObject
+        {
+            ["owner"] = owner,
+            ["repo"] = repo,
+            ["pullNumber"] = prNumber
+        }, ct);
+
+        // get_pull_request returns PR metadata JSON; treat the full JSON payload as the
+        // diff context for the LLM prompt (ReviewingState uses ctx.PrReview.Diff directly).
+        diff = diffResult.Text;
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to fetch PR #{PrNumber}", prNumber);
+        throw;
+    }
+
+    var ctx = new GsdWorkflowContext
+    {
+        PrReview = new GsdOrchestrator.Workflows.Models.PrReviewContext(prNumber, owner, repo, diff),
+        CurrentState = WorkflowState.Reviewing
+    };
+
+    // Run ReviewingState directly (no full state machine loop needed for PR mode)
+    var reviewing = sm.GetState(WorkflowState.Reviewing);
+    return await reviewing.ExecuteAsync(ctx, ct);
+}
+
+static void PrintPrReviewResult(GsdWorkflowContext result)
+{
+    if (result.Review is not null)
+    {
+        Console.WriteLine();
+        Console.WriteLine($"PR Review complete: {result.Review.Verdict}");
+        Console.WriteLine($"  {result.Review.Summary}");
+        if (result.Review.Comments.Count > 0)
+        {
+            Console.WriteLine($"  Inline comments: {result.Review.Comments.Count}");
+            foreach (var c in result.Review.Comments)
+                Console.WriteLine($"    [{c.Severity.ToUpperInvariant()}] {c.Path}:{c.Line} — {c.Body}");
+        }
+        Console.WriteLine($"  Workflow ID: {result.WorkflowId}");
+    }
+    else
+    {
+        Console.Error.WriteLine($"PR review failed: {result.FailureReason}");
+    }
 }
 
 static void PrintResult(GsdWorkflowContext result)

@@ -62,6 +62,12 @@ public sealed class GsdStateMachine
         return ExecuteLoopAsync(ctx, ct);
     }
 
+    /// <summary>Returns the registered handler for the given state (used by --pr entry point).</summary>
+    public IWorkflowState GetState(WorkflowState state) =>
+        _states.TryGetValue(state, out var s)
+            ? s
+            : throw new InvalidOperationException($"No handler registered for state {state}");
+
     /// <summary>Resumes an interrupted workflow from its last checkpoint.</summary>
     public async Task<GsdWorkflowContext> ResumeAsync(string workflowId, CancellationToken ct)
     {
