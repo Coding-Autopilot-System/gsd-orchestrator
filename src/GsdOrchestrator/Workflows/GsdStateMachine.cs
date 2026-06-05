@@ -107,16 +107,17 @@ public sealed class GsdStateMachine
             }
         }
 
-        // Final checkpoint
-        await _checkpoints.SaveAsync(ctx, ct);
+        // Final checkpoint — use CancellationToken.None so a racing Ctrl+C
+        // does not lose the completed/failed state.
+        await _checkpoints.SaveAsync(ctx, CancellationToken.None);
 
         if (ctx.CurrentState == WorkflowState.Failed)
         {
-            await PostFailureCommentAsync(ctx, ct);
+            await PostFailureCommentAsync(ctx, CancellationToken.None);
         }
         else
         {
-            await _checkpoints.ArchiveAsync(ctx.WorkflowId, ct);
+            await _checkpoints.ArchiveAsync(ctx.WorkflowId, CancellationToken.None);
         }
 
         return ctx;
