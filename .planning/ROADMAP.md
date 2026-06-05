@@ -410,11 +410,11 @@ Plans:
 
 **Requirements:** MULTI-01, MULTI-02, MULTI-03, MULTI-04
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 16-01-PLAN.md — Add RepoConfig record + RepoConfigLoader stub to WorkflowModels.cs; namespace FileCheckpointStore.StatePath to {owner}_{repo}_{workflowId}.json; 7 RED/GREEN test stubs (MULTI-01, MULTI-03) [Wave 1]
-- [ ] 16-02-PLAN.md — Implement RepoConfigLoader.Load() (GSD_REPOS JSON + legacy fallback); remove IConfiguration from IdleState; multi-repo watch loop in Program.cs; all 30 tests GREEN (MULTI-01, MULTI-02, MULTI-03, MULTI-04) [Wave 2]
+- [x] 16-02-PLAN.md — Implement RepoConfigLoader.Load() (GSD_REPOS JSON + legacy fallback); remove IConfiguration from IdleState; multi-repo watch loop in Program.cs; all 30 tests GREEN (MULTI-01, MULTI-02, MULTI-03, MULTI-04) [Wave 2]
 
 **Success Criteria:**
 - `GSD_REPOS` JSON array replaces single owner/repo env vars (backwards compatible)
