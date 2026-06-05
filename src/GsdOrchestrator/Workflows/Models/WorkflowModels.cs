@@ -80,6 +80,26 @@ public sealed record PullRequestContext(
     string Title,
     string Body);
 
+// ── Phase 15: PR review loop models ─────────────────────────────────────────
+
+public sealed record ReviewComment(
+    string Path,
+    int Line,
+    string Side,
+    string Severity,
+    string Body);
+
+public sealed record ReviewResult(
+    string Verdict,
+    string Summary,
+    IReadOnlyList<ReviewComment> Comments);
+
+public sealed record PrReviewContext(
+    int PrNumber,
+    string Owner,
+    string Repo,
+    string Diff);
+
 public sealed record TriageResult(
     string Classification,
     string Reason,
@@ -105,6 +125,8 @@ public sealed record GsdWorkflowContext
     public PullRequestContext? PullRequest { get; init; }
     public TriageResult? Triage { get; init; }
     public TestGenerationContext? TestGeneration { get; init; } // Phase 14
+    public ReviewResult? Review { get; init; }        // Phase 15
+    public PrReviewContext? PrReview { get; init; }   // Phase 15: --pr mode input
     public bool TriageModeOnly { get; init; } = false;
     public WorkflowState CurrentState { get; init; } = WorkflowState.Idle;
     public int RetryCount { get; init; }
