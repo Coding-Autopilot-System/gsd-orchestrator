@@ -160,7 +160,13 @@ public sealed class TestGeneratingState : IWorkflowState
         {
             turns++;
             var response = await _llm.GetResponseAsync(messages, options, ct);
-            var lastMessage = response.Messages.Last();
+            var lastMessage = response.Messages.LastOrDefault();
+            if (lastMessage is null)
+            {
+                _logger.LogWarning("LLM returned no messages for {TestPath}, turn {Turn}", testPath, turns);
+                break;
+            }
+
             messages.Add(lastMessage);
 
             if (response.FinishReason == ChatFinishReason.ToolCalls)
@@ -169,7 +175,9 @@ public sealed class TestGeneratingState : IWorkflowState
                 {
                     if (call.Name == "write_file")
                     {
-                        var rawContent = call.Arguments?["content"]?.ToString();`r`n                        if (!string.IsNullOrWhiteSpace(rawContent))`r`n                            finalContent = rawContent;
+                        var rawContent = call.Arguments?["content"]?.ToString();
+                        if (!string.IsNullOrWhiteSpace(rawContent))
+                            finalContent = rawContent;
                         messages.Add(new ChatMessage(ChatRole.Tool,
                             [new FunctionResultContent(call.CallId, "File staged for commit.")]));
                     }
