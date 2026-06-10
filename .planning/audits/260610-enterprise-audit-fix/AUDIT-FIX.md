@@ -8,7 +8,7 @@
 
 | ID | Finding | Severity | Classification | Status |
 |---|---|---|---|---|
-| F-01 | CI builds only the production project and never runs tests | high | auto-fixable | fixed |
+| F-01 | CI builds only the production project and never runs tests | high | auto-fixable | blocked: GitHub token lacks workflow scope |
 | F-02 | Test generation accepts blank tool content and crashes on empty LLM messages | high | auto-fixable | fixed after validation repair |
 | F-03 | Editing state accepts blank tool content and crashes on empty LLM messages | high | auto-fixable | not attempted after pipeline stop |
 | F-04 | Workflow states use null-forgiving context dereferences instead of diagnostic guards | medium | auto-fixable | not attempted after pipeline stop |
@@ -25,7 +25,7 @@
 
 ## Fix Evidence
 
-- F-01: CI restores/builds the solution and runs the complete test suite.
+- F-01: The fix was validated locally, then reverted because GitHub rejected workflow updates from the active OAuth token without `workflow` scope.
 - F-02: Blank generated test content is skipped and empty LLM response collections are handled safely; regression coverage added.
 - Final local validation: `dotnet build GithubMCP.slnx --configuration Release --no-restore`, `dotnet test GithubMCP.slnx --configuration Release --no-build`, and `git diff --check`.
 
