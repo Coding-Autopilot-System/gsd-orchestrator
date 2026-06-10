@@ -19,7 +19,10 @@ jobs:
           dotnet-version: '10.0.1xx'
 
       - name: Restore dependencies
-        run: dotnet restore src/GsdOrchestrator/GsdOrchestrator.csproj
+        run: dotnet restore GithubMCP.slnx
 
       - name: Build
-        run: dotnet build src/GsdOrchestrator/GsdOrchestrator.csproj --no-restore --configuration Release
+        run: dotnet build GithubMCP.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test GithubMCP.slnx --no-build --configuration Release
