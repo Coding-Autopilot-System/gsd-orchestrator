@@ -1,6 +1,8 @@
 # GSD Orchestrator
 
-Autonomous GitHub agentic workflow system. Point it at a GitHub issue and it reads the issue, creates a branch, edits code, commits, and opens a PR — all without human intervention.
+Autonomous GitHub issue-to-PR engine. Point it at a real issue and it reads the
+task, plans the work, creates a branch, edits code, validates the result, and
+opens a pull request with durable workflow state.
 
 **Stack:** .NET 10 (C#) · GitHub MCP Server · Anthropic Claude · Polly
 
@@ -13,19 +15,37 @@ Part of the [Coding-Autopilot-System](https://github.com/Coding-Autopilot-System
 
 ---
 
-## How it works
+## Why This Repo Matters
 
+`gsd-orchestrator` is the execution-focused flagship in the portfolio. Its value is
+not just "AI edits code." The stronger signal is the operational model around that:
+
+- state-machine controlled execution instead of a single opaque loop
+- checkpoint and resume behavior for long-running workflows
+- explicit validation gates before PR creation
+- GitHub operations routed through MCP tooling rather than hard-coded scripts
+- a design that can later sit behind a workstation bundle or a hosted control plane
+
+## Enterprise Proof Points
+
+- **Durability**: workflow state is checkpointed so interrupted runs can be resumed.
+- **Guardrails**: validation blocks unsafe diffs, merge-conflict surprises, and weak test intent.
+- **Operational separation**: GitHub tool access is mediated through MCP rather than being spread across ad hoc shell calls.
+- **Auditability**: the lifecycle from issue to branch to PR is explicit and reproducible.
+
+See [docs/portfolio-proof.md](docs/portfolio-proof.md) for a concise reviewer-oriented summary.
+
+## How It Works
+
+```text
+Issue -> Analyzing -> Branching -> Editing -> Validating -> Committing -> PR Creating -> Reviewing -> Documenting -> Done
 ```
-Issue → Analyzing → Branching → Editing → Validating → Committing → PR Creating → Reviewing → Documenting → Done
-```
 
-The state machine drives the entire flow. Each state uses GitHub MCP tools via stdio to interact with GitHub and Claude to reason about what to do next. Checkpoints are written to disk so a failed run can be resumed.
+The state machine drives the entire flow. Each state uses GitHub MCP tools via stdio
+to interact with GitHub and Claude to reason about what to do next. Checkpoints are
+written to disk so a failed run can be resumed.
 
----
-
-## Diagrams
-
-### State Machine
+## State Machine
 
 ```mermaid
 stateDiagram-v2
@@ -42,21 +62,19 @@ stateDiagram-v2
     Documenting --> [*]
 ```
 
-**State descriptions:**
+### State Responsibilities
 
-- **Idle** — Fetches repository metadata and full issue body from GitHub via MCP. Reads labels and default branch.
-- **Analyzing** — Asks Claude to produce an implementation plan: branch name, files to modify, summary, and whether tests are required. Retries up to 3 times if JSON parse fails.
-- **Branching** — Creates a new feature branch from the default branch. Idempotent: if the branch already exists, resumes from it.
-- **Editing** — For each file in the plan, runs a ReAct loop: reads current content, asks Claude to edit it, commits the result via `create_or_update_file`. Max 20 turns per file.
-- **Validating** — Runs four gates: file safety blocklist, merge conflict pre-flight, diff size, and test coverage intent. Blocks on critical failures; warns on soft failures.
-- **Committing** — Confirms the final commit SHA is present on the branch by calling `get_branch`. Records the commit URL.
-- **PrCreating** — Generates a PR title and body via Claude, then opens the pull request. Idempotent: checks for an existing open PR from the same branch before creating.
-- **Reviewing** — Posts a bot review comment explaining what changed and why. Requests reviewers from `GSD_REVIEWERS` env var if configured.
-- **Documenting** — Updates `docs/github-mcp-tools.md` and `CHANGELOG.md` on the default branch. If `GSD_AUTO_MERGE=true`, squash-merges the PR.
+- **Idle** - Fetches repository metadata and full issue body from GitHub via MCP.
+- **Analyzing** - Produces an implementation plan, branch intent, file targets, and test expectations.
+- **Branching** - Creates or resumes the feature branch.
+- **Editing** - Runs iterative edit loops for each file in scope.
+- **Validating** - Applies safety checks, merge checks, diff checks, and test-intent checks.
+- **Committing** - Confirms the resulting commit is present on the branch.
+- **PrCreating** - Creates or reuses the pull request for the work branch.
+- **Reviewing** - Posts summary and reviewer guidance.
+- **Documenting** - Updates supporting documentation and optional auto-merge flow.
 
----
-
-### Component Topology
+## Component Topology
 
 ```mermaid
 flowchart LR
@@ -91,81 +109,73 @@ flowchart LR
 
 ## Prerequisites
 
-- Windows (Task Scheduler integration for auto-start)
+- Windows
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- `github-mcp-server.exe` — already included in the repo root
+- `github-mcp-server.exe` already included in the repo root
 - A GitHub Personal Access Token with `repo` and `read:org` scopes
-- An Anthropic API key (for the autonomous orchestrator)
-
----
+- An Anthropic API key
 
 ## Setup
 
 ```bash
-# 1. Clone
 git clone https://github.com/Coding-Autopilot-System/gsd-orchestrator.git
 cd gsd-orchestrator
-
-# 2. Create .env
 cp .env.example .env
 ```
 
-Edit `.env` and fill in your values:
+Edit `.env` and set:
 
 ```env
 GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
 ANTHROPIC_API_KEY=sk-ant-...
 GSD_GITHUB_OWNER=Coding-Autopilot-System
 GSD_GITHUB_REPO=gsd-orchestrator
-GSD_REVIEWERS=                          # optional, comma-separated usernames
+GSD_REVIEWERS=
 ```
 
----
-
-## Run the autonomous orchestrator
+## Run The Orchestrator
 
 ```bash
 cd src/GsdOrchestrator
-
-# Start a new workflow for issue #42
 dotnet run -- --issue 42
-
-# Resume a failed/interrupted workflow
 dotnet run -- --resume <workflow-id>
 ```
 
 On success:
-```
-✓ PR created:   https://github.com/.../pull/N
-✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md
+
+```text
+? PR created:   https://github.com/.../pull/N
+? Docs updated: docs/github-mcp-tools.md, CHANGELOG.md
   Workflow ID:  <id>
 ```
 
-On failure the workflow ID is printed — use `--resume` to continue from the last checkpoint.
+## Demo Review Path
 
----
+For a fast evaluation of the repo:
 
-## Use GitHub MCP tools in AI CLIs (no orchestrator needed)
+1. Read this README for the control flow and operational model.
+2. Read [docs/portfolio-proof.md](docs/portfolio-proof.md) for the concise reviewer summary.
+3. Inspect `src/GsdOrchestrator/Workflows/States` for the state-machine structure.
+4. Inspect the GitHub MCP startup scripts to see how local CLI use and orchestrator use are separated.
 
-The `github-mcp-server.exe` runs as an HTTP server on `localhost:8765` and exposes all GitHub tools to any MCP-compatible AI CLI.
+## Use GitHub MCP Tools In AI CLIs
 
-### Auto-start at Windows logon (run once)
+The `github-mcp-server.exe` also runs as an HTTP server on `localhost:8765` and can
+serve GitHub tools to any MCP-compatible AI CLI.
+
+### Auto-Start At Windows Logon
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File install-autostart.ps1
 ```
 
-This registers a Task Scheduler task that starts the MCP server at logon.
-
-### Manual start
+### Manual Start
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File start-mcp-server.ps1
 ```
 
 ### Claude Code
-
-Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -180,54 +190,26 @@ Add to `~/.claude/settings.json`:
 
 ### Gemini CLI / Codex CLI
 
-Point your MCP config at `http://localhost:8765/sse` (SSE transport).
+Point MCP configuration at `http://localhost:8765/sse`.
 
----
+## Architecture Summary
 
-## Architecture
+The MCP server is spawned as a stdio child process by the orchestrator, separate from
+the HTTP instance used by AI CLIs.
 
-```
-┌─────────────────────────────────────────────┐
-│              GSD Orchestrator (.NET 10)      │
-│                                              │
-│  Program.cs → GsdStateMachine               │
-│               ├── AnalyzingState            │
-│               ├── BranchingState            │
-│               ├── EditingState              │
-│               ├── ValidatingState           │
-│               ├── CommittingState           │
-│               ├── PrCreatingState           │
-│               ├── ReviewingState            │
-│               └── DocumentingState          │
-│                                              │
-│  McpStdioClient ──► github-mcp-server.exe   │
-│  (stdio, spawned as child process)          │
-│                                              │
-│  FileCheckpointStore → .checkpoints/        │
-│  Anthropic.SDK → Claude (claude-sonnet-4-6) │
-│  Polly → retry + exponential backoff        │
-└─────────────────────────────────────────────┘
-```
-
-The MCP server is spawned as a **stdio child process** by the orchestrator — separate from the HTTP instance used by AI CLIs.
-
----
-
-## Project structure
-
-```
+```text
 GithubMCP/
-├── github-mcp-server.exe          # Pre-built GitHub MCP Server binary
-├── start-mcp-server.ps1           # Start HTTP MCP server (for AI CLIs)
-├── install-autostart.ps1          # Register Task Scheduler auto-start
-├── .env.example                   # Environment variable template
-└── src/GsdOrchestrator/
-    ├── Program.cs                 # Entry point, DI wiring, CLI args
-    ├── Auth/                      # GitHub PAT provider
-    ├── Checkpointing/             # File-based workflow checkpoints
-    ├── Mcp/                       # MCP stdio client + tool dispatcher
-    └── Workflows/
-        ├── GsdStateMachine.cs     # Orchestrates state transitions
-        ├── Models/                # WorkflowContext, enums
-        └── States/                # One file per workflow state
+|-- github-mcp-server.exe
+|-- start-mcp-server.ps1
+|-- install-autostart.ps1
+|-- .env.example
+`-- src/GsdOrchestrator/
+    |-- Program.cs
+    |-- Auth/
+    |-- Checkpointing/
+    |-- Mcp/
+    `-- Workflows/
+        |-- GsdStateMachine.cs
+        |-- Models/
+        `-- States/
 ```
