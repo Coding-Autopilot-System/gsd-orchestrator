@@ -169,7 +169,7 @@ public sealed class TestGeneratingState : IWorkflowState
                 {
                     if (call.Name == "write_file")
                     {
-                        finalContent = call.Arguments?["content"]?.ToString();
+                        var rawContent = call.Arguments?["content"]?.ToString();`r`n                        if (!string.IsNullOrWhiteSpace(rawContent))`r`n                            finalContent = rawContent;
                         messages.Add(new ChatMessage(ChatRole.Tool,
                             [new FunctionResultContent(call.CallId, "File staged for commit.")]));
                     }
