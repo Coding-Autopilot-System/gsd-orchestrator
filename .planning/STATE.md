@@ -16,6 +16,8 @@ stopped_at: Milestone complete (Phase 16 was final phase)
 
 # Project State — gsd-orchestrator Feature Expansion (Milestone 3.0)
 
+Last activity: 2026-06-10 - Completed quick task 260610-ppo: Fix PR #6 README workflow state diagram responsibilities to match actual code including Triaging and TestGenerating and render success sample cleanly
+
 ## Current Status
 
 **Active Phase:** Phase 16 — Multi-Repo Support (planned — 2 plans ready)
@@ -267,3 +269,9 @@ All 11 phases and 11 v2 requirements satisfied. Full portfolio live at:
 |------|-----------|------|------------|
 | 16-01 | Add RepoConfig record + RepoConfigLoader stub; namespace FileCheckpointStore.StatePath; 7 RED/GREEN test stubs | 1 | yes |
 | 16-02 | Implement RepoConfigLoader.Load(); remove IConfiguration from IdleState; multi-repo watch loop; all 30 tests GREEN | 2 | yes |
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Status | Directory |
+|---|-------------|------|--------|--------|-----------|
+| 260610-ppo | Fix PR #6 README workflow/state documentation and success sample | 2026-06-10 | c31493b | Verified | [260610-ppo-fix-pr-6-readme-workflow-state-diagram-r](./quick/260610-ppo-fix-pr-6-readme-workflow-state-diagram-r/) |
