@@ -38,12 +38,14 @@ See [docs/portfolio-proof.md](docs/portfolio-proof.md) for a concise reviewer-or
 ## How It Works
 
 ```text
-Issue -> Analyzing -> Branching -> Editing -> Validating -> Committing -> PR Creating -> Reviewing -> Documenting -> Done
+Issue -> Idle -> Triaging -> Analyzing -> Branching -> Editing -> TestGenerating -> Validating -> Committing -> PrCreating -> Reviewing -> Documenting -> Done
 ```
 
-The state machine drives the entire flow. Each state uses GitHub MCP tools via stdio
+Actionable issues follow the full path. Non-actionable issues and `--triage` runs
+exit after `Triaging`. The separate `--pr` mode enters at `Reviewing` and exits
+after submitting its structured review. Each state uses GitHub MCP tools via stdio
 to interact with GitHub and Claude to reason about what to do next. Checkpoints are
-written to disk so a failed run can be resumed.
+written to disk so an interrupted or failed run can be inspected and resumed.
 
 ## State Machine
 
@@ -51,28 +53,41 @@ written to disk so a failed run can be resumed.
 stateDiagram-v2
     direction LR
     [*] --> Idle
-    Idle --> Analyzing
+    Idle --> Triaging
+    Triaging --> Analyzing: actionable issue
+    Triaging --> Done: non-actionable or --triage
     Analyzing --> Branching
     Branching --> Editing
-    Editing --> Validating
+    Editing --> TestGenerating
+    TestGenerating --> Validating
     Validating --> Committing
+    Validating --> Failed: blocking gate
     Committing --> PrCreating
     PrCreating --> Reviewing
-    Reviewing --> Documenting
-    Documenting --> [*]
+    Reviewing --> Documenting: issue mode
+    [*] --> Reviewing: --pr mode
+    Reviewing --> Done: PR-review mode
+    Documenting --> Done
+    Done --> [*]
+    Failed --> [*]
 ```
+
+Any unhandled state exception also transitions the workflow to `Failed`.
 
 ### State Responsibilities
 
 - **Idle** - Fetches repository metadata and full issue body from GitHub via MCP.
+- **Triaging** - Classifies the issue, checks for duplicates, posts the triage result, and routes actionable issues to analysis or exits.
 - **Analyzing** - Produces an implementation plan, branch intent, file targets, and test expectations.
 - **Branching** - Creates or resumes the feature branch.
-- **Editing** - Runs iterative edit loops for each file in scope.
-- **Validating** - Applies safety checks, merge checks, diff checks, and test-intent checks.
-- **Committing** - Confirms the resulting commit is present on the branch.
+- **Editing** - Runs iterative edit loops and commits each changed file to the feature branch.
+- **TestGenerating** - Generates or extends xUnit tests for eligible edited C# source files.
+- **Validating** - Applies file-safety, merge-conflict, diff-size, test-intent, and generated-test structure checks.
+- **Committing** - Confirms and records the latest commit on the feature branch.
 - **PrCreating** - Creates or reuses the pull request for the work branch.
-- **Reviewing** - Posts summary and reviewer guidance.
-- **Documenting** - Updates supporting documentation and optional auto-merge flow.
+- **Reviewing** - Posts issue-mode reviewer guidance and requests reviewers, or submits a structured review in `--pr` mode.
+- **Documenting** - Refreshes the MCP tool catalog and changelog on the default branch, then optionally auto-merges.
+- **Done / Failed** - Terminal outcomes recorded by the state machine.
 
 ## Component Topology
 
@@ -144,8 +159,8 @@ dotnet run -- --resume <workflow-id>
 On success:
 
 ```text
-? PR created:   https://github.com/.../pull/N
-? Docs updated: docs/github-mcp-tools.md, CHANGELOG.md
+✓ PR created:   https://github.com/.../pull/N
+✓ Docs updated: docs/github-mcp-tools.md, CHANGELOG.md
   Workflow ID:  <id>
 ```
 
