@@ -72,6 +72,22 @@ public class TestGeneratingStateTests
         return llm;
     }
 
+
+    private static IChatClient BuildLlmWithEmptyToolContent()
+    {
+        var llm = Substitute.For<IChatClient>();
+        var functionCall = new FunctionCallContent(
+            "call_empty", "write_file",
+            new Dictionary<string, object?> { ["content"] = "   ", ["commitMessage"] = "test: empty" });
+        var response = new ChatResponse(new ChatMessage(ChatRole.Assistant, [functionCall]))
+        {
+            FinishReason = ChatFinishReason.ToolCalls
+        };
+        llm.GetResponseAsync(
+                Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(response));
+        return llm;
+    }
     // Returns IMcpClient that stubs get_file_contents and create_or_update_file.
     // When testFileExists=true, the second get_file_contents call (test file) returns existing sha.
     private static IMcpClient BuildMcpClient(bool sourceFileExists = true, bool testFileExists = false)
@@ -240,5 +256,17 @@ public class TestGeneratingStateTests
             Arg.Is<string>("create_or_update_file"),
             Arg.Any<JsonObject>(),
             Arg.Any<CancellationToken>());
+    }
+    [Fact]
+    public async Task ExecuteAsync_WithWhitespaceToolContent_SkipsWithoutCommitting()
+    {
+        var mcp = BuildMcpClient();
+        var sut = BuildSut(mcp, BuildLlmWithEmptyToolContent());
+
+        var result = await sut.ExecuteAsync(BuildContext(), CancellationToken.None);
+
+        Assert.True(result.TestGeneration!.GeneratedTests[0].WasSkipped);
+        await mcp.DidNotReceive().CallToolAsync(
+            Arg.Is<string>("create_or_update_file"), Arg.Any<JsonObject>(), Arg.Any<CancellationToken>());
     }
 }
