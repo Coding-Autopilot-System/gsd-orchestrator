@@ -60,9 +60,12 @@ public sealed class FileCheckpointStore : ICheckpointStore
         _logger.LogDebug("Checkpoint saved: {WorkflowId} → {State}", ctx.WorkflowId, ctx.CurrentState);
     }
 
+    private const string CurrentSchemaVersion = "1.0";
+
     /// <summary>
     /// CR-03: Try exact (legacy) path first, then scan for namespaced *_{workflowId}.json.
     /// This allows resuming workflows saved after Phase 16 namespacing was introduced.
+    /// Phase 18: Validates SchemaVersion — returns null and logs a warning on mismatch.
     /// </summary>
     public async Task<GsdWorkflowContext?> LoadAsync(string workflowId, CancellationToken ct = default)
     {
@@ -71,7 +74,8 @@ public sealed class FileCheckpointStore : ICheckpointStore
         if (File.Exists(exactPath))
         {
             await using var fs = new FileStream(exactPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs, JsonOpts, ct);
+            var ctx = await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs, JsonOpts, ct);
+            return ValidateSchemaVersion(ctx, workflowId);
         }
 
         // Try namespaced match: *_{sanitizedWorkflowId}.json
@@ -80,10 +84,24 @@ public sealed class FileCheckpointStore : ICheckpointStore
         if (candidates.Length == 1)
         {
             await using var fs2 = new FileStream(candidates[0], FileMode.Open, FileAccess.Read, FileShare.Read);
-            return await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs2, JsonOpts, ct);
+            var ctx2 = await JsonSerializer.DeserializeAsync<GsdWorkflowContext>(fs2, JsonOpts, ct);
+            return ValidateSchemaVersion(ctx2, workflowId);
         }
 
         return null;
+    }
+
+    private GsdWorkflowContext? ValidateSchemaVersion(GsdWorkflowContext? ctx, string workflowId)
+    {
+        if (ctx is null) return null;
+        if (ctx.SchemaVersion != CurrentSchemaVersion)
+        {
+            _logger.LogWarning(
+                "Checkpoint schema version mismatch: expected {Expected}, found {Found}. Starting fresh.",
+                CurrentSchemaVersion, ctx.SchemaVersion);
+            return null;
+        }
+        return ctx;
     }
 
     public Task<IReadOnlyList<string>> ListActiveWorkflowsAsync(CancellationToken ct = default)

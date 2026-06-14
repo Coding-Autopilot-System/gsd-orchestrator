@@ -23,3 +23,19 @@ jobs:
 
       - name: Build
         run: dotnet build src/GsdOrchestrator/GsdOrchestrator.csproj --no-restore --configuration Release
+
+      - name: Restore test dependencies
+        run: dotnet restore src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj
+
+      - name: Build tests
+        run: dotnet build src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --logger trx --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-results
+          path: TestResults/

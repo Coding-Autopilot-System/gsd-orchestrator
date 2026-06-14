@@ -125,6 +125,7 @@ public sealed record RepoConfig(
 
 public sealed record GsdWorkflowContext
 {
+    public string SchemaVersion { get; init; } = "1.0";
     public string WorkflowId { get; init; } = Guid.NewGuid().ToString("N")[..16];
     public IssueContext? Issue { get; init; }
     public AnalysisPlan? Plan { get; init; }

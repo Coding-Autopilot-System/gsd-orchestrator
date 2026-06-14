@@ -438,3 +438,90 @@ Plans:
 | MULTI-01–04 | 16 |
 
 **13 v3 requirements across 5 phases**
+
+---
+
+# Milestone 4.0 — Quality Hardening
+
+**Goal:** CI pipeline enforces test execution and coverage reporting; all state classes have dedicated unit tests; checkpoint format is schema-versioned; flagship repos have correct discovery metadata.
+
+**Repo:** Coding-Autopilot-System/gsd-orchestrator (C#/.NET 10)
+
+---
+
+## Phase 17 — CI Hardening
+
+**Goal:** CI workflow executes tests and reports coverage on every push/PR.
+
+**Requirements:** CIQUAL-01, CIQUAL-02, CIQUAL-03
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md — Add `dotnet test` step to ci.yml with Coverlet XML + TRX output, upload coverage artifact (CIQUAL-01, CIQUAL-02)
+- [ ] 17-02-PLAN.md — Add coverage badge to README (shields.io from coverage.xml artifact) (CIQUAL-03)
+
+**Success Criteria:**
+- PR checks page shows a passing "test" step alongside the existing "build" step
+- GitHub Actions run has a Coverage artifact downloadable from the run summary
+- README renders a coverage badge with a % value
+
+**Depends on:** Phase 16 (35 existing tests must be green before CI enforces them)
+**Estimated effort:** Small
+
+---
+
+## Phase 18 — State Test Coverage + Checkpoint Hardening
+
+**Goal:** All 6 previously untested state classes have xUnit test files; checkpoint serialization is schema-versioned.
+
+**Requirements:** TESTCOV-01, TESTCOV-02, TESTCOV-03, TESTCOV-04, TESTCOV-05, TESTCOV-06, CHKPT-01, CHKPT-02
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Write AnalyzingStateTests.cs, BranchingStateTests.cs, EditingStateTests.cs (Wave 1 — read-heavy states) (TESTCOV-01, TESTCOV-02, TESTCOV-05)
+- [ ] 18-02-PLAN.md — Write CommittingStateTests.cs, DocumentingStateTests.cs, PrCreatingStateTests.cs (Wave 2 — write-heavy states) (TESTCOV-03, TESTCOV-04, TESTCOV-06)
+- [ ] 18-03-PLAN.md — Add SchemaVersion to GsdWorkflowContext in WorkflowModels.cs; add version check to FileCheckpointStore.LoadAsync; write 2 unit tests verifying mismatch handling (CHKPT-01, CHKPT-02)
+
+**Success Criteria:**
+- `dotnet test` runs 53+ tests (35 existing + 18 new state tests + 2 checkpoint tests) all green
+- Each new *StateTests.cs has at minimum: HappyPath, ClaudeFailure, Cancellation [Fact] methods
+- `FileCheckpointStore` logs a warning and returns null when checkpoint SchemaVersion != current
+
+**Depends on:** Phase 17 (CI must collect coverage before new tests are meaningful as metrics)
+**Estimated effort:** Medium-large (6 state classes × 3 tests + checkpoint schema work)
+
+---
+
+## Phase 19 — Portfolio Polish
+
+**Goal:** All CAS flagship repos have correct GitHub topics; OgeonX-Ai personal profile README is live.
+
+**Requirements:** POLISH-01, POLISH-02
+
+**Plans:** 2 plans
+
+Plans:
+- [ ] 19-01-PLAN.md — Apply GitHub topics to gsd-orchestrator, Promptimprover, autogen via `gh repo edit --add-topic`; verify via `gh repo view --json repositoryTopics` (POLISH-01)
+- [ ] 19-02-PLAN.md — Create/update OgeonX-Ai personal profile README at OgeonX-Ai/.github/profile/README.md — links to Coding-Autopilot-System org, highlights gsd-orchestrator/Promptimprover/autogen as a system (POLISH-02)
+
+**Success Criteria:**
+- `gh repo view Coding-Autopilot-System/gsd-orchestrator --json repositoryTopics` returns at least 5 topics including `autonomous-agent`, `dotnet`, `state-machine`
+- github.com/OgeonX-Ai shows a profile README
+- Profile README includes a "Part of Coding-Autopilot-System" section linking to the org
+
+**Depends on:** Phase 16 (Milestone 3.0 complete — stable feature set to describe in profile)
+**Estimated effort:** Small
+
+---
+
+## Coverage Check (Milestone 4.0)
+
+| Requirement | Phase |
+|-------------|-------|
+| CIQUAL-01–03 | 17 |
+| TESTCOV-01–06, CHKPT-01–02 | 18 |
+| POLISH-01–02 | 19 |
+
+**13 v4 requirements across 3 phases ✓**
