@@ -108,9 +108,35 @@
 - [x] **MULTI-03**: Checkpointing scoped per repo (`checkpoints/{owner}_{repo}/`)
 - [x] **MULTI-04**: Configurable inter-repo delay (`GSD_REPO_DELAY_SECONDS`) to avoid API rate limits
 
+## v4 Requirements — Milestone 4.0 (Quality Hardening)
+
+### CI Quality (CIQUAL)
+
+- [ ] **CIQUAL-01**: CI workflow runs `dotnet test` on every push/PR — not just build
+- [ ] **CIQUAL-02**: Coverlet coverage collected in CI — TRX report + XML coverage artifact uploaded
+- [ ] **CIQUAL-03**: Coverage badge in README showing current line coverage %
+
+### Test Coverage (TESTCOV)
+
+- [ ] **TESTCOV-01**: `AnalyzingState` has dedicated xUnit test class (≥ 3 [Fact] tests covering Happy Path, Claude failure, and cancellation)
+- [ ] **TESTCOV-02**: `BranchingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [ ] **TESTCOV-03**: `CommittingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [ ] **TESTCOV-04**: `DocumentingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [ ] **TESTCOV-05**: `EditingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [ ] **TESTCOV-06**: `PrCreatingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+
+### Checkpoint Hardening (CHKPT)
+
+- [ ] **CHKPT-01**: `GsdWorkflowContext` (WorkflowModels.cs) includes `SchemaVersion` string property, serialized to checkpoint JSON
+- [ ] **CHKPT-02**: `FileCheckpointStore.LoadAsync` checks `SchemaVersion` on load — logs warning and returns null (starts fresh) on version mismatch
+
+### Portfolio Polish (POLISH)
+
+- [ ] **POLISH-01**: GitHub topics applied to all CAS flagship repos (gsd-orchestrator, Promptimprover, autogen) — verified via `gh repo view --json repositoryTopics`
+- [ ] **POLISH-02**: OgeonX-Ai personal profile README exists in `OgeonX-Ai/.github` repo at `profile/README.md`, linking to Coding-Autopilot-System org and highlighting gsd-orchestrator, Promptimprover, autogen as system
+
 ## v1 Deferred (still out of scope for v2)
 
-- Test suites for gsd-orchestrator, Promptimprover, autogen
 - GitHub Projects board showing roadmap
 - Dependabot configuration
 - CONTRIBUTING.md and CODE_OF_CONDUCT.md
@@ -137,3 +163,6 @@
 | TECH-01–02 | Phase 9 |
 | PORT-01–02 | Phase 10 |
 | COHER-01–03 | Phase 11 |
+| CIQUAL-01–03 | Phase 17 |
+| TESTCOV-01–06, CHKPT-01–02 | Phase 18 |
+| POLISH-01–02 | Phase 19 |

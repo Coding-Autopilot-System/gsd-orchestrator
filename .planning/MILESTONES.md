@@ -34,15 +34,29 @@
 
 ---
 
-## v3.0 — gsd-orchestrator Feature Expansion (ACTIVE)
+## v3.0 — gsd-orchestrator Feature Expansion (COMPLETE 2026-06-05)
 
 **Goal:** Extend gsd-orchestrator from a single-repo issue-to-PR automator into a multi-repo, triage-aware, test-generating autonomous engineering platform.
 
-**Phases:** 12-16 (in progress)
+**Phases:** 12-16
+
+**What shipped:**
+- Serilog structured logging, xUnit test project (35 tests), Polly circuit breaker
+- TriagingState with duplicate detection, --triage mode, out-of-scope close logic
+- TestGeneratingState: Claude generates xUnit tests committed to feature branch
+- ReviewingState: --pr mode, structured inline review comments, approve/request-changes
+- Multi-repo: GSD_REPOS JSON config, per-repo checkpoint namespacing, watch mode rate-limit delay
+
+---
+
+## v4.0 — Quality Hardening (ACTIVE)
+
+**Goal:** Close the gap between "tests exist" and "CI actually runs them," fill xUnit coverage across 6 untested states, version the checkpoint schema, and complete portfolio polish.
+
+**Phases:** 17-19 (in progress)
 
 **Target features:**
-- Robustness foundation (structured logging, unit tests, circuit breaker)
-- Smarter issue triage (TriagingState, label classification, --triage mode)
-- Autonomous test generation (TestGeneratingState, xUnit, committed to branch)
-- PR review loop (--pr mode, structured code review, approve/request-changes)
-- Multi-repo support (GSD_REPOS config, watch across repos, per-repo checkpointing)
+- CI runs dotnet test (not just build) + Coverlet coverage badge
+- xUnit tests for Analyzing, Branching, Committing, Documenting, Editing, PrCreating states
+- Checkpoint schema versioning (SchemaVersion field + mismatch guard)
+- GitHub topics on all CAS repos + OgeonX-Ai profile README

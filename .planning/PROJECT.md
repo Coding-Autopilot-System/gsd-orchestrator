@@ -1,15 +1,16 @@
 # Enterprise GitHub Portfolio + gsd-orchestrator
 
-## Current Milestone: v3.0 — gsd-orchestrator Feature Expansion
+## Current Milestone: v4.0 — Quality Hardening
 
-**Goal:** Extend gsd-orchestrator from a single-repo issue-to-PR automator into a multi-repo, triage-aware, test-generating autonomous engineering platform.
+**Goal:** Close the gap between "tests exist" and "CI actually runs them," fill xUnit coverage holes across 6 untested state classes, version the checkpoint schema for forward compatibility, and complete remaining portfolio polish.
 
 **Target features:**
-- Robustness foundation (Serilog, xUnit, circuit breaker)
-- Smarter issue triage (TriagingState, --triage mode, duplicate detection)
-- Autonomous test generation (TestGeneratingState, xUnit tests on branch)
-- PR review loop (--pr mode, structured inline comments, approve/request-changes)
-- Multi-repo support (GSD_REPOS config, per-repo checkpointing)
+- CI runs dotnet test (currently builds only — tests never execute in CI)
+- Coverlet coverage collection + badge in README
+- xUnit tests for 6 uncovered states: Analyzing, Branching, Committing, Documenting, Editing, PrCreating
+- Checkpoint schema versioning (SchemaVersion field + mismatch guard in FileCheckpointStore)
+- GitHub topics applied to all CAS flagship repos
+- OgeonX-Ai personal profile README linking to Coding-Autopilot-System org
 
 ---
 
