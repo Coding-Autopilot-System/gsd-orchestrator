@@ -3,35 +3,43 @@ gsd_state_version: 1.0
 milestone: v4.0.0
 milestone_name: Quality Hardening
 current_plan: 0
-status: planning
-last_updated: 2026-06-14T00:00:00Z
+status: complete
+last_updated: 2026-06-15T00:00:00Z
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
-stopped_at: Not started — defining roadmap
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
+  percent: 100
+stopped_at: Milestone complete — v4.0.0 tagged
 ---
 
 # Project State — Quality Hardening (Milestone 4.0)
 
-Last activity: 2026-06-14 — Milestone v4.0 started
+Last activity: 2026-06-15 — Milestone v4.0 complete, v4.0.0 release tagged
 
 ## Current Position
 
-Phase: Not started (defining roadmap)
+Phase: COMPLETE
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-14 — Milestone v4.0 started
+Status: All 3 phases complete
+Last activity: 2026-06-15 — v4.0.0 GitHub release tagged
 
 ## Current Status
 
 **Active Phase:** —
-**Current Plan:** Not started
-**Last Completed:** Phase 16 — Multi-Repo Support (Milestone 3.0, 2026-06-05)
-**Milestone:** 4.0 — Quality Hardening
-**Last Updated:** 2026-06-14T00:00:00Z
+**Current Plan:** —
+**Last Completed:** Phase 19 — Portfolio Polish (2026-06-15)
+**Milestone:** 4.0 — Quality Hardening (COMPLETE)
+**Last Updated:** 2026-06-15T00:00:00Z
+
+## Milestone 4.0 Phase Progress
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 17 | CI Hardening | complete (2026-06-14) |
+| 18 | State Test Coverage + Checkpoint Versioning | complete (2026-06-14) |
+| 19 | Portfolio Polish | complete (2026-06-15) |
 
 ## Milestone 3.0 Phase Progress
 
@@ -40,8 +48,8 @@ Last activity: 2026-06-14 — Milestone v4.0 started
 | 12 | Robustness Foundation | complete (2026-06-01) |
 | 13 | Smarter Issue Triage | complete (2026-06-02) |
 | 14 | Autonomous Test Generation | complete (2026-06-04) |
-| 15 | PR Review Loop | planned (2026-06-05) |
-| 16 | Multi-Repo Support | planned (2026-06-05) |
+| 15 | PR Review Loop | complete (2026-06-05) |
+| 16 | Multi-Repo Support | complete (2026-06-05) |
 
 ## Phase 12 Plans
 
