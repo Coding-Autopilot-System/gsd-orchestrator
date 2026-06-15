@@ -49,14 +49,19 @@
 
 ---
 
-## v4.0 — Quality Hardening (ACTIVE)
+## v4.0 — Quality Hardening (COMPLETE 2026-06-15)
 
 **Goal:** Close the gap between "tests exist" and "CI actually runs them," fill xUnit coverage across 6 untested states, version the checkpoint schema, and complete portfolio polish.
 
-**Phases:** 17-19 (in progress)
+**Phases:** 17-19
 
-**Target features:**
-- CI runs dotnet test (not just build) + Coverlet coverage badge
-- xUnit tests for Analyzing, Branching, Committing, Documenting, Editing, PrCreating states
-- Checkpoint schema versioning (SchemaVersion field + mismatch guard)
-- GitHub topics on all CAS repos + OgeonX-Ai profile README
+**What shipped:**
+- CI runs `dotnet test` with Coverlet XPlat Code Coverage; results uploaded as artifact
+- README test badge: ![Tests](https://img.shields.io/badge/tests-73%20passing-brightgreen)
+- xUnit tests for all 6 previously untested states: AnalyzingState, BranchingState, EditingState, CommittingState, DocumentingState, PrCreatingState (33 new tests)
+- CheckpointStoreTests: schema compatibility, round-trip, missing-file-returns-null (4 tests)
+- Total test count: 73 (up from 36)
+- `SchemaVersion { get; init; } = "1.0"` added to GsdWorkflowContext
+- FileCheckpointStore.LoadAsync logs warning and returns null on schema version mismatch
+- GitHub topics applied to gsd-orchestrator, Promptimprover, autogen via `gh repo edit`
+- OgeonX-Ai/.github profile README created (commit dd19d55)
