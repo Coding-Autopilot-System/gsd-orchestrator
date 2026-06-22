@@ -11,6 +11,7 @@ namespace GsdOrchestrator.Mcp;
 /// One JSON object per line. Responses are correlated to requests by the "id" field.
 /// The server process is spawned on InitializeAsync and disposed with this client.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage(Justification = "Subprocess stdio wrapper — requires live MCP binary; covered by integration tests")]
 public sealed class McpStdioClient : IMcpClient
 {
     private readonly string _githubToken;
