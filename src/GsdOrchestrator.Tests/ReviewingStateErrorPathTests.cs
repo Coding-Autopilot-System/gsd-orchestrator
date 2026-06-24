@@ -40,9 +40,9 @@ public class ReviewingStateErrorPathTests
     {
         var m = Substitute.For<IMcpClient>();
         m.CallToolAsync(Arg.Is<string>("get_pull_request"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
-         .Returns(Task.FromResult(new McpToolResult("err",isError:true)));
+         .Returns(Task.FromResult(new McpToolResult("err",true)));
         m.CallToolAsync(Arg.Is<string>("create_pull_request_review"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
-         .Returns(Task.FromResult(new McpToolResult("{}",isError:false)));
+         .Returns(Task.FromResult(new McpToolResult("{}",false)));
         var res = await Sut(m,LlmApprove()).ExecuteAsync(PrCtx(),CancellationToken.None);
         Assert.Equal(WorkflowState.Done,res.CurrentState);
     }
@@ -54,7 +54,7 @@ public class ReviewingStateErrorPathTests
         m.CallToolAsync(Arg.Is<string>("get_pull_request"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
          .ThrowsAsync(new McpException("notfound",isTransient:false));
         m.CallToolAsync(Arg.Is<string>("create_pull_request_review"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
-         .Returns(Task.FromResult(new McpToolResult("{}",isError:false)));
+         .Returns(Task.FromResult(new McpToolResult("{}",false)));
         var res = await Sut(m,LlmApprove()).ExecuteAsync(PrCtx(),CancellationToken.None);
         Assert.Equal(WorkflowState.Done,res.CurrentState);
     }
@@ -95,7 +95,7 @@ public class ReviewingStateErrorPathTests
         m.CallToolAsync(Arg.Is<string>("get_pull_request"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
          .Returns(Task.FromResult(new McpToolResult("{\"title\":\"T\",\"body\":\"\"}",false)));
         m.CallToolAsync(Arg.Is<string>("create_pull_request_review"),Arg.Any<JsonObject>(),Arg.Any<CancellationToken>())
-         .Returns(Task.FromResult(new McpToolResult("fail",isError:true)));
+         .Returns(Task.FromResult(new McpToolResult("fail",true)));
         await Assert.ThrowsAsync<McpException>(()=>Sut(m,LlmApprove()).ExecuteAsync(PrCtx(),CancellationToken.None));
     }
 

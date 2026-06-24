@@ -186,11 +186,12 @@ public class ValidatingStateTests
         var mcp = BuildMcpClientAhead();
         var base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(fileContent));
         var json = string.Format("{{\"content\":\"{0}\"}}", base64);
+        var result = new McpToolResult(json, false);
         mcp.CallToolAsync(
             Arg.Is<string>("get_file_contents"),
             Arg.Any<JsonObject>(),
             Arg.Any<CancellationToken>())
-           .Returns(Task.FromResult(new McpToolResult(json, false)));
+           .Returns(_ => Task.FromResult(result));
         return mcp;
     }
 

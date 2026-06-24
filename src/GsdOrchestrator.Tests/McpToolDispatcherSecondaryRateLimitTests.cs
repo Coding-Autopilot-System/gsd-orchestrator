@@ -25,7 +25,7 @@ public class McpToolDispatcherSecondaryRateLimitTests
         var client = Substitute.For<IMcpClient>();
         var callCount = 0;
         client.CallToolAsync(Arg.Any<string>(), Arg.Any<JsonObject>(), Arg.Any<CancellationToken>())
-              .Returns(ci =>
+              .Returns<Task<McpToolResult>>(ci =>
               {
                   callCount++;
                   throw new McpException("secondary rate limit hit", isTransient: true, isSecondaryRateLimit: true);

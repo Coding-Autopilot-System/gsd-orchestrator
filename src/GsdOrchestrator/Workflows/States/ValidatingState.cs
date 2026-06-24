@@ -142,6 +142,13 @@ public sealed class ValidatingState : IWorkflowState
                             ["ref"] = branch.BranchName
                         }, ct);
 
+                        if (fileResult is null)
+                        {
+                            _logger.LogWarning("Test file {Path} returned null from MCP", generatedTest.TestPath);
+                            testCompilationPassed = false;
+                            continue;
+                        }
+
                         var fileJson = fileResult.ParseInnerJson();
                         var b64 = fileJson?["content"]?.GetValue<string>()?.Replace("\n", "") ?? "";
                         var content = b64.Length > 0
