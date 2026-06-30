@@ -68,16 +68,16 @@ public class CheckpointStoreTests : IDisposable
         Assert.Equal(WorkflowState.Analyzing, loaded.CurrentState);
     }
 
-    // CHECKPOINT-02: incompatible schema version — returns null (fresh start)
+    // CHECKPOINT-02: incompatible schema version — fails clearly
     [Fact]
-    public async Task LoadAsync_IncompatibleSchemaVersion_ReturnsNull()
+    public async Task LoadAsync_IncompatibleSchemaVersion_ThrowsInvalidDataException()
     {
         var ctx = BuildContext("wf-schema-incompat", schemaVersion: "2.0");
         WriteRawCheckpoint(ctx);
 
-        var loaded = await _store.LoadAsync("wf-schema-incompat");
-
-        Assert.Null(loaded);
+        var error = await Assert.ThrowsAsync<InvalidDataException>(
+            () => _store.LoadAsync("wf-schema-incompat"));
+        Assert.Contains("2.0", error.Message);
     }
 
     // CHECKPOINT-01: save then load round-trip preserves state
