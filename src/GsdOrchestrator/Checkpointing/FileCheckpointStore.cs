@@ -60,7 +60,8 @@ public sealed class FileCheckpointStore : ICheckpointStore
         _logger.LogDebug("Checkpoint saved: {WorkflowId} → {State}", ctx.WorkflowId, ctx.CurrentState);
     }
 
-    private const string CurrentSchemaVersion = "1.0";
+    private const string CurrentSchemaVersion = "1.1";
+    private const string LegacySchemaVersion = "1.0";
 
     /// <summary>
     /// CR-03: Try exact (legacy) path first, then scan for namespaced *_{workflowId}.json.
@@ -94,14 +95,19 @@ public sealed class FileCheckpointStore : ICheckpointStore
     private GsdWorkflowContext? ValidateSchemaVersion(GsdWorkflowContext? ctx, string workflowId)
     {
         if (ctx is null) return null;
-        if (ctx.SchemaVersion != CurrentSchemaVersion)
+        if (ctx.SchemaVersion == CurrentSchemaVersion)
+            return ctx;
+
+        if (ctx.SchemaVersion == LegacySchemaVersion)
         {
-            _logger.LogWarning(
-                "Checkpoint schema version mismatch: expected {Expected}, found {Found}. Starting fresh.",
-                CurrentSchemaVersion, ctx.SchemaVersion);
-            return null;
+            _logger.LogInformation(
+                "Upgrading checkpoint {WorkflowId} from schema {Previous} to {Current}.",
+                workflowId, LegacySchemaVersion, CurrentSchemaVersion);
+            return ctx with { SchemaVersion = CurrentSchemaVersion };
         }
-        return ctx;
+
+        throw new InvalidDataException(
+            $"Checkpoint '{workflowId}' uses unsupported schema version '{ctx.SchemaVersion}'. Expected '{CurrentSchemaVersion}' or legacy '{LegacySchemaVersion}'.");
     }
 
     public Task<IReadOnlyList<string>> ListActiveWorkflowsAsync(CancellationToken ct = default)
