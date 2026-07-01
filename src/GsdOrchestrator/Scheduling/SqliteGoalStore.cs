@@ -22,7 +22,12 @@ public sealed class SqliteGoalStore : IGoalStore
         ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
         var fullPath = Path.GetFullPath(databasePath);
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
-        _connectionString = new SqliteConnectionStringBuilder { DataSource = fullPath, Mode = SqliteOpenMode.ReadWriteCreate }.ToString();
+        _connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = fullPath,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false,
+        }.ToString();
         _logger = logger;
     }
 
