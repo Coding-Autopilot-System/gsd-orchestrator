@@ -69,7 +69,7 @@ async Task<PilotEvidence> RunCoordinatorScenario(string scenario, IReadOnlyList<
                 ["terminalLearningPublications"] = learning.Outcomes.Count,
             };
         return new("1.0.0", scenario, "passed", true,
-            [Git(Directory.GetCurrentDirectory(), "rev-parse", "HEAD").Trim(), "9f57bac", "e24a328"], events, assertions,
+            [Git(Directory.GetCurrentDirectory(), "rev-parse", "HEAD").Trim(), "54fd535", "9057fa0"], events, assertions,
             run.Aggregate.Evidence.Select(item => item.Uri).Distinct().ToArray(),
             ["dotnet run --project tools/LoopPilotRunner"]);
     }
