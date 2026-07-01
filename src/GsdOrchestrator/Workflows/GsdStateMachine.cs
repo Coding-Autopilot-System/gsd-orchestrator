@@ -8,6 +8,7 @@ namespace GsdOrchestrator.Workflows;
 
 public sealed class GsdStateMachine
 {
+    private const int MaxRecoveryAttempts = 1;
     private readonly ICheckpointStore _checkpoints;
     private readonly McpToolDispatcher _mcp;
     private readonly ILogger<GsdStateMachine> _logger;
@@ -56,6 +57,35 @@ public sealed class GsdStateMachine
         var ctx = await _checkpoints.LoadAsync(workflowId, ct)
             ?? throw new InvalidOperationException($"No checkpoint found for workflow '{workflowId}'");
 
+        if (ctx.CurrentState == WorkflowState.Failed)
+        {
+            if (ctx.FailedState is null)
+                throw new InvalidOperationException(
+                    $"Workflow '{workflowId}' failed without a recoverable state. Start a new workflow after reviewing its checkpoint.");
+
+            if (ctx.RetryCount >= MaxRecoveryAttempts)
+                throw new InvalidOperationException(
+                    $"Workflow '{workflowId}' reached the recovery retry limit of {MaxRecoveryAttempts}.");
+
+            var failedState = ctx.FailedState.Value;
+            ctx = ctx with
+            {
+                CurrentState = failedState,
+                FailedState = null,
+                FailureReason = null,
+                RetryCount = ctx.RetryCount + 1,
+                History =
+                [
+                    .. ctx.History,
+                    new StateTransitionEvent(
+                        WorkflowState.Failed,
+                        failedState,
+                        DateTimeOffset.UtcNow,
+                        "Explicit recovery retry")
+                ]
+            };
+        }
+
         _logger.LogInformation("Resuming workflow {WorkflowId} from state {StateName}", workflowId, ctx.CurrentState);
         return await ExecuteLoopAsync(ctx, ct);
     }
@@ -103,7 +133,18 @@ public sealed class GsdStateMachine
                 _logger.LogError(ex,
                     "Workflow {WorkflowId} failed at state {StateName} after {DurationMs}ms. IssueNumber={IssueNumber}",
                     ctx.WorkflowId, previousState, sw.ElapsedMilliseconds, ctx.Issue?.Number);
-                ctx = (ctx with { FailureReason = ex.Message }).Transition(WorkflowState.Failed);
+                var failureReason = ex.Message.Length <= 1024 ? ex.Message : ex.Message[..1024];
+                ctx = ctx with
+                {
+                    CurrentState = WorkflowState.Failed,
+                    FailedState = previousState,
+                    FailureReason = failureReason,
+                    History =
+                    [
+                        .. ctx.History,
+                        new StateTransitionEvent(previousState, WorkflowState.Failed, DateTimeOffset.UtcNow, failureReason)
+                    ]
+                };
             }
         }
 

@@ -125,7 +125,7 @@ public sealed record RepoConfig(
 
 public sealed record GsdWorkflowContext
 {
-    public string SchemaVersion { get; init; } = "1.0";
+    public string SchemaVersion { get; init; } = "1.1";
     public string WorkflowId { get; init; } = Guid.NewGuid().ToString("N")[..16];
     public IssueContext? Issue { get; init; }
     public AnalysisPlan? Plan { get; init; }
@@ -141,6 +141,7 @@ public sealed record GsdWorkflowContext
     public bool TriageModeOnly { get; init; } = false;
     public WorkflowState CurrentState { get; init; } = WorkflowState.Idle;
     public int RetryCount { get; init; }
+    public WorkflowState? FailedState { get; init; }
     public string? FailureReason { get; init; }
     public IReadOnlyList<StateTransitionEvent> History { get; init; } = [];
 
@@ -149,6 +150,8 @@ public sealed record GsdWorkflowContext
         {
             History = [.. History, new StateTransitionEvent(CurrentState, to, DateTimeOffset.UtcNow, detail)],
             CurrentState = to,
-            RetryCount = 0
+            RetryCount = to == WorkflowState.Failed ? RetryCount : 0,
+            FailedState = to == WorkflowState.Failed ? FailedState ?? CurrentState : null,
+            FailureReason = to == WorkflowState.Failed ? FailureReason : null
         };
 }
