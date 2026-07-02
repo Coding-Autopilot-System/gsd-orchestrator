@@ -19,7 +19,7 @@ public sealed class OperatorProjectionTests
             [new("budget-1", "goal-1", "work-1", "provider", "repo", 3, 1)],
             [new("evidence-1", "goal-1", "work-1", "test", "file:///evidence/test.json")],
             [new("transition-1", "goal-1", "Verifying", "Failed", "UnrecoverableFault", DateTimeOffset.UnixEpoch)],
-            [],
+            [new("event-1", "goal-1", 1, "verification.decision", """{"outcome":"stop"}""", DateTimeOffset.UnixEpoch)],
             []);
 
         var view = OperatorProjection.Project(aggregate);
@@ -34,6 +34,7 @@ public sealed class OperatorProjectionTests
         Assert.Single(view.Leases);
         Assert.Single(view.Attempts);
         Assert.Single(view.Evidence);
+        Assert.Single(view.Events);
     }
 
     [Fact]

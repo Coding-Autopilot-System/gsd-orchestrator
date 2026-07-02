@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "1.0.0",
+  "scenario": "feature",
+  "status": "passed",
+  "bounded": true,
+  "sourceCommits": [
+    "647aa853e053cb44da06f4764bade0d48469083d",
+    "54fd535",
+    "9057fa0"
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "type": "analysis.fanout",
+      "outcome": "four-read-only-specialists"
+    },
+    {
+      "sequence": 1,
+      "type": "analysis.fanin",
+      "outcome": "peak-concurrency-3"
+    },
+    {
+      "sequence": 2,
+      "type": "step.contract.declared",
+      "outcome": "declared"
+    },
+    {
+      "sequence": 3,
+      "type": "worker.succeeded",
+      "outcome": "succeeded"
+    },
+    {
+      "sequence": 4,
+      "type": "verification.completed",
+      "outcome": "passed"
+    },
+    {
+      "sequence": 5,
+      "type": "verification.decision",
+      "outcome": "advance"
+    },
+    {
+      "sequence": 6,
+      "type": "goal.completed",
+      "outcome": "completed"
+    }
+  ],
+  "assertions": {
+    "parallelAnalysis": true,
+    "peakConcurrency": 3,
+    "isolatedImplementation": true,
+    "mandatoryVerification": "passed",
+    "goalStatus": "completed",
+    "terminalLearningPublications": 1
+  },
+  "artifacts": [
+    "cas://evidence/worker/goal-feature/1/research",
+    "cas://evidence/worker/goal-feature/1/architecture",
+    "cas://evidence/worker/goal-feature/1/security",
+    "cas://evidence/worker/goal-feature/1/test",
+    "cas://evidence/verifier/passed"
+  ],
+  "reproduce": [
+    "dotnet run --project tools/LoopPilotRunner"
+  ]
+}

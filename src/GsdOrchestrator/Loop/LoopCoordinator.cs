@@ -7,8 +7,30 @@ using System.Text.Json.Nodes;
 
 namespace GsdOrchestrator.Loop;
 
-public sealed record LoopWorkRequest(string GoalId, string WorkItemId, int Attempt, bool IsRepair, string CorrelationId);
-public sealed record LoopWorkResult(bool Succeeded, IReadOnlyList<string> EvidenceUris, string Summary, int PeakConcurrency = 1);
+public sealed record LoopToolScope(bool MutationAllowed, string MutationOwner, IReadOnlyList<string> AllowedTools);
+public sealed record LoopStepInput(string Name, string Value);
+public sealed record LoopCompletionCriterion(string Id, string Description, bool Mandatory);
+public sealed record LoopFanOutPlan(int MaxConcurrency, IReadOnlyList<string> RequiredRoles, string AggregatorRole);
+public sealed record LoopStepContract(
+    string ContractId,
+    string ContextBundleId,
+    string Objective,
+    string DownstreamConsumer,
+    string OutputSchema,
+    LoopToolScope ToolScope,
+    LoopFanOutPlan FanOut,
+    IReadOnlyList<LoopStepInput> Inputs,
+    IReadOnlyList<LoopCompletionCriterion> CompletionCriteria);
+public sealed record LoopWorkRequest(string GoalId, string WorkItemId, int Attempt, bool IsRepair, string CorrelationId, LoopStepContract Contract);
+public sealed record LoopWorkResult(
+    bool Succeeded,
+    IReadOnlyList<string> EvidenceUris,
+    string Summary,
+    string ContractId,
+    string ContextBundleId,
+    string OutputSchema,
+    IReadOnlyList<string> Roles,
+    int PeakConcurrency = 1);
 public sealed record TerminalLoopOutcome(string GoalId, string CorrelationId, GoalStatus Status, string Summary, IReadOnlyList<string> EvidenceUris);
 public sealed record LoopRunResult(GoalAggregate Aggregate, int WorkerAttempts, int VerificationRuns, bool RepairCreated, int PeakConcurrency);
 
@@ -58,10 +80,16 @@ public sealed class MafProcessLoopWorker(string pythonExecutable, string mafRoot
             throw new InvalidOperationException($"MAF worker failed with exit code {process.ExitCode}: {error.Trim()}");
         var envelope = JsonSerializer.Deserialize<MafWorkerEnvelope>(output, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new InvalidOperationException("MAF worker returned no result.");
-        return new(envelope.Succeeded, envelope.EvidenceUris, envelope.Summary, envelope.PeakConcurrency);
+        if (!string.Equals(envelope.ContractId, request.Contract.ContractId, StringComparison.Ordinal))
+            throw new InvalidOperationException($"MAF worker contract mismatch. Expected {request.Contract.ContractId}, received {envelope.ContractId}.");
+        if (!string.Equals(envelope.ContextBundleId, request.Contract.ContextBundleId, StringComparison.Ordinal))
+            throw new InvalidOperationException($"MAF worker context bundle mismatch. Expected {request.Contract.ContextBundleId}, received {envelope.ContextBundleId}.");
+        if (!string.Equals(envelope.OutputSchema, request.Contract.OutputSchema, StringComparison.Ordinal))
+            throw new InvalidOperationException($"MAF worker output schema mismatch. Expected {request.Contract.OutputSchema}, received {envelope.OutputSchema}.");
+        return new(envelope.Succeeded, envelope.EvidenceUris, envelope.Summary, envelope.ContractId, envelope.ContextBundleId, envelope.OutputSchema, envelope.Roles, envelope.PeakConcurrency);
     }
 
-    private sealed record MafWorkerEnvelope(bool Succeeded, int PeakConcurrency, string[] Roles, string[] EvidenceUris, string Summary);
+    private sealed record MafWorkerEnvelope(bool Succeeded, int PeakConcurrency, string[] Roles, string[] EvidenceUris, string Summary, string ContractId, string ContextBundleId, string OutputSchema);
 }
 
 public sealed class McpTerminalOutcomePublisher(McpToolDispatcher dispatcher) : ITerminalOutcomePublisher
@@ -130,7 +158,7 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
                 if (repair is not null)
                 {
                     repairCreated = true;
-                    aggregate = AddEvent(aggregate, "repair.created", $"attempt-{repair.AttemptNumber}");
+                    aggregate = AddDecisionEvent(aggregate, "repair.created", "create_repair", new { repair.AttemptNumber, repair.EvidenceUris });
                     await store.SaveAsync(aggregate, cancellationToken);
                     var repaired = await ExecuteAttemptAsync(aggregate, workItem, repair.AttemptNumber, true, cancellationToken);
                     aggregate = repaired.Aggregate;
@@ -143,6 +171,18 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
                         aggregate = AddVerification(aggregate, workItem.Id, verification);
                     }
                 }
+                else
+                {
+                    aggregate = AddDecisionEvent(aggregate, "verification.decision", "stop", new { reason = "repair_not_permitted" });
+                }
+            }
+            else if (verification.Outcome == VerificationOutcome.Inconclusive)
+            {
+                aggregate = AddDecisionEvent(aggregate, "verification.decision", "request_evidence", new { reason = "mandatory_checks_inconclusive" });
+            }
+            else
+            {
+                aggregate = AddDecisionEvent(aggregate, "verification.decision", "advance", new { target = "goal_completion" });
             }
         }
 
@@ -165,8 +205,10 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
         bool isRepair,
         CancellationToken cancellationToken)
     {
-        var request = new LoopWorkRequest(aggregate.Goal.Id, workItem.Id, attemptNumber, isRepair, aggregate.Goal.CorrelationId);
+        var contract = BuildContract(aggregate, workItem, attemptNumber, isRepair);
+        var request = new LoopWorkRequest(aggregate.Goal.Id, workItem.Id, attemptNumber, isRepair, aggregate.Goal.CorrelationId, contract);
         var result = await worker.ExecuteAsync(request, cancellationToken);
+        ValidateWorkResult(contract, result);
         var now = DateTimeOffset.UtcNow;
         var attempt = new AttemptRecord(Guid.NewGuid().ToString("N"), aggregate.Goal.Id, workItem.Id, attemptNumber,
             result.Succeeded ? AttemptStatus.Succeeded : AttemptStatus.Failed, now);
@@ -177,10 +219,74 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
             Goal = aggregate.Goal with { Status = GoalStatus.Running },
             Attempts = [.. aggregate.Attempts, attempt],
             Evidence = [.. aggregate.Evidence, .. evidence],
-            Events = [.. aggregate.Events, NewEvent(aggregate, $"worker.{(result.Succeeded ? "succeeded" : "failed")}", $"attempt-{attemptNumber}")]
+            Events =
+            [
+                .. aggregate.Events,
+                NewEvent(aggregate, "step.contract.declared", "declared", new
+                {
+                    contract.ContractId,
+                    contract.ContextBundleId,
+                    contract.Objective,
+                    contract.DownstreamConsumer,
+                    contract.OutputSchema,
+                    contract.FanOut.RequiredRoles,
+                    contract.FanOut.MaxConcurrency,
+                    contract.ToolScope.MutationAllowed,
+                }),
+                NewEvent(aggregate, $"worker.{(result.Succeeded ? "succeeded" : "failed")}", result.Succeeded ? "succeeded" : "failed", new
+                {
+                    result.ContractId,
+                    result.ContextBundleId,
+                    result.Roles,
+                    result.PeakConcurrency,
+                    result.Summary,
+                })
+            ]
         };
         await store.SaveAsync(updated, cancellationToken);
         return (updated, result);
+    }
+
+    private static void ValidateWorkResult(LoopStepContract contract, LoopWorkResult result)
+    {
+        if (string.IsNullOrWhiteSpace(result.Summary))
+            throw new InvalidOperationException("Loop worker returned an empty summary.");
+        if (result.EvidenceUris.Count < contract.FanOut.RequiredRoles.Count)
+            throw new InvalidOperationException("Loop worker returned fewer evidence URIs than required specialist roles.");
+        var required = new HashSet<string>(contract.FanOut.RequiredRoles, StringComparer.Ordinal);
+        var actual = new HashSet<string>(result.Roles, StringComparer.Ordinal);
+        if (!required.SetEquals(actual))
+            throw new InvalidOperationException("Loop worker returned a role set that does not match the declared step contract.");
+    }
+
+    private static LoopStepContract BuildContract(GoalAggregate aggregate, WorkItemRecord workItem, int attemptNumber, bool isRepair)
+    {
+        var phase = isRepair ? "repair" : "feature";
+        return new LoopStepContract(
+            ContractId: $"{aggregate.Goal.Id}:{workItem.Id}:attempt-{attemptNumber}",
+            ContextBundleId: $"{aggregate.Goal.CorrelationId}:{workItem.Id}:{phase}:{attemptNumber}",
+            Objective: isRepair
+                ? $"Repair verifier failures for work item {workItem.Id} in {workItem.Repository}."
+                : $"Produce bounded specialist analysis for work item {workItem.Id} in {workItem.Repository}.",
+            DownstreamConsumer: "loop_verifier",
+            OutputSchema: "cas.loop.step-result.v1",
+            ToolScope: new LoopToolScope(false, "implementation-owner", ["read_repo", "search_repo"]),
+            FanOut: new LoopFanOutPlan(aggregate.Goal.Limits.MaxFanOut, ["research", "architecture", "security", "test"], "loop_verifier"),
+            Inputs:
+            [
+                new("goalId", aggregate.Goal.Id),
+                new("workItemId", workItem.Id),
+                new("repository", workItem.Repository),
+                new("provider", workItem.Provider),
+                new("attempt", attemptNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                new("mode", phase),
+            ],
+            CompletionCriteria:
+            [
+                new("all-roles-terminal", "All required specialist branches must reach a terminal result.", true),
+                new("all-results-schema-valid", "Each specialist result and the final aggregate must validate against the declared schema.", true),
+                new("evidence-emitted", "Each required branch must emit at least one evidence URI.", true),
+            ]);
     }
 
     private static GoalAggregate AddVerification(GoalAggregate aggregate, string workItemId, VerificationRunResult result)
@@ -192,12 +298,17 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
         return aggregate with
         {
             Evidence = [.. aggregate.Evidence, .. evidence],
-            Events = [.. aggregate.Events, NewEvent(aggregate, "verification.completed", result.Outcome.ToString().ToLowerInvariant())]
+            Events = [.. aggregate.Events, NewEvent(aggregate, "verification.completed", result.Outcome.ToString().ToLowerInvariant(), new
+            {
+                checkCount = result.Checks.Count,
+                mandatoryFailures = result.Checks.Count(check => check.Mandatory && check.Outcome == VerificationOutcome.Failed),
+                mandatoryInconclusive = result.Checks.Count(check => check.Mandatory && check.Outcome == VerificationOutcome.Inconclusive),
+            })]
         };
     }
 
-    private static GoalAggregate AddEvent(GoalAggregate aggregate, string type, string payload) =>
-        aggregate with { Events = [.. aggregate.Events, NewEvent(aggregate, type, payload)] };
+    private static GoalAggregate AddDecisionEvent(GoalAggregate aggregate, string type, string outcome, object payload) =>
+        aggregate with { Events = [.. aggregate.Events, NewEvent(aggregate, type, outcome, payload)] };
 
     private static GoalAggregate Complete(GoalAggregate aggregate, string workItemId, GoalStatus status, string leaseId)
     {
@@ -215,10 +326,21 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
         };
     }
 
-    private static GoalEventRecord NewEvent(GoalAggregate aggregate, string type, string payload) =>
+    private static GoalEventRecord NewEvent(GoalAggregate aggregate, string type, string outcome, object? payload = null) =>
         new(Guid.NewGuid().ToString("N"), aggregate.Goal.Id,
             aggregate.Events.Count == 0 ? 1 : aggregate.Events.Max(item => item.Sequence) + 1,
-            type, System.Text.Json.JsonSerializer.Serialize(new { outcome = payload }), DateTimeOffset.UtcNow);
+            type, System.Text.Json.JsonSerializer.Serialize(payload is null ? new { outcome } : MergePayload(outcome, payload)), DateTimeOffset.UtcNow);
+
+    private static object MergePayload(string outcome, object payload)
+    {
+        var values = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["outcome"] = outcome,
+        };
+        foreach (var property in payload.GetType().GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+            values[property.Name] = property.GetValue(payload);
+        return values;
+    }
 }
 
 public enum ExternalActionDecision { Authorized, WaitingApproval }

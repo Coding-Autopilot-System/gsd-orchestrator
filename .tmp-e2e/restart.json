@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0.0",
+  "scenario": "restart",
+  "status": "passed",
+  "bounded": true,
+  "sourceCommits": [
+    "ddef0bf"
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "type": "lease.expired",
+      "outcome": "worker-interrupted"
+    },
+    {
+      "sequence": 1,
+      "type": "lease.reclaimed",
+      "outcome": "new-owner"
+    },
+    {
+      "sequence": 2,
+      "type": "side-effects.reconciled",
+      "outcome": "idempotent"
+    }
+  ],
+  "assertions": {
+    "leaseReclaimed": true,
+    "duplicateCommit": 0,
+    "duplicateComment": 0,
+    "duplicatePullRequest": 0,
+    "idempotencyPreserved": true
+  },
+  "artifacts": [
+    "cas://evidence/pilots/restart/sqlite-lease",
+    "cas://evidence/pilots/restart/idempotency"
+  ],
+  "reproduce": [
+    "dotnet run --project tools/LoopPilotRunner"
+  ]
+}

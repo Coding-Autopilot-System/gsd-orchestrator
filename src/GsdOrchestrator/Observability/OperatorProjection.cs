@@ -11,6 +11,7 @@ public sealed record OperatorGoalView(
     IReadOnlyList<LeaseRecord> Leases,
     IReadOnlyList<AttemptRecord> Attempts,
     IReadOnlyList<EvidenceRecord> Evidence,
+    IReadOnlyList<GoalEventRecord> Events,
     int RemainingModelCalls,
     int RemainingAttempts,
     GoalStopReason? StopReason);
@@ -36,6 +37,7 @@ public static class OperatorProjection
             aggregate.Leases,
             aggregate.Attempts,
             aggregate.Evidence,
+            aggregate.Events,
             remainingCalls,
             remainingAttempts,
             stopReason);

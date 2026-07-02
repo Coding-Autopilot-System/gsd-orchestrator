@@ -20,6 +20,12 @@ public sealed class LoopCoordinatorTests
         Assert.Equal(1, result.VerificationRuns);
         Assert.False(result.RepairCreated);
         Assert.Single(fixture.Learning.Outcomes);
+        Assert.NotNull(fixture.Worker.LastRequest);
+        Assert.Equal("loop_verifier", fixture.Worker!.LastRequest!.Contract.DownstreamConsumer);
+        Assert.Equal("cas.loop.step-result.v1", fixture.Worker.LastRequest.Contract.OutputSchema);
+        Assert.Equal(new[] { "research", "architecture", "security", "test" }, fixture.Worker.LastRequest.Contract.FanOut.RequiredRoles);
+        Assert.Contains(result.Aggregate.Events, item => item.Type == "step.contract.declared");
+        Assert.Contains(result.Aggregate.Events, item => item.Type == "verification.decision");
         Assert.Contains(result.Aggregate.Events, item => item.Type == "goal.completed");
     }
 
@@ -39,6 +45,27 @@ public sealed class LoopCoordinatorTests
     }
 
     [Fact]
+    public async Task RunAsync_InconclusiveVerification_RecordsRequestEvidenceDecision()
+    {
+        await using var fixture = await Fixture.CreateAsync([Inconclusive()]);
+
+        var result = await fixture.Coordinator.RunAsync("goal-1", Budget());
+
+        Assert.Equal(GoalStatus.Failed, result.Aggregate.Goal.Status);
+        Assert.Contains(result.Aggregate.Events, item => item.Type == "verification.decision" && item.PayloadJson.Contains("request_evidence", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task RunAsync_RejectsWorkerResultThatViolatesDeclaredStepContract()
+    {
+        await using var fixture = await Fixture.CreateAsync([Passed()], new InvalidWorker());
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Coordinator.RunAsync("goal-1", Budget()));
+
+        Assert.Contains("role set", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void PolicyGuard_DeniesEnvironmentAndHoldsExternalActions()
     {
         Assert.Throws<UnauthorizedAccessException>(() => LoopPolicyGuard.RequireReadablePath("repo/.env"));
@@ -49,6 +76,7 @@ public sealed class LoopCoordinatorTests
     private static RepairBudget Budget() => new(true, 0, 2, 0, 2, 0, 10);
     private static VerificationRunResult Passed() => Result(VerificationOutcome.Passed);
     private static VerificationRunResult Failed() => Result(VerificationOutcome.Failed);
+    private static VerificationRunResult Inconclusive() => Result(VerificationOutcome.Inconclusive);
     private static VerificationRunResult Result(VerificationOutcome outcome) => new(outcome,
         [new("test", VerificationCategory.Test, true, outcome, $"cas://evidence/{outcome}", outcome == VerificationOutcome.Passed ? 0 : 1, 1)]);
 
@@ -57,17 +85,20 @@ public sealed class LoopCoordinatorTests
         private readonly string _path;
         public LoopCoordinator Coordinator { get; }
         public CapturingLearning Learning { get; }
+        public SuccessfulWorker? Worker { get; }
 
-        private Fixture(string path, LoopCoordinator coordinator, CapturingLearning learning) => (_path, Coordinator, Learning) = (path, coordinator, learning);
+        private Fixture(string path, LoopCoordinator coordinator, CapturingLearning learning, SuccessfulWorker? worker) => (_path, Coordinator, Learning, Worker) = (path, coordinator, learning, worker);
 
-        public static async Task<Fixture> CreateAsync(IReadOnlyList<VerificationRunResult> results)
+        public static async Task<Fixture> CreateAsync(IReadOnlyList<VerificationRunResult> results, ILoopWorker? worker = null)
         {
             var path = Path.Combine(Path.GetTempPath(), $"loop-{Guid.NewGuid():N}.db");
             var store = new SqliteGoalStore(path, NullLogger<SqliteGoalStore>.Instance);
             await store.InitializeAsync();
             await store.SaveAsync(Aggregate());
             var learning = new CapturingLearning();
-            return new(path, new(store, new SuccessfulWorker(), new ScriptedVerifier(results), learning), learning);
+            var inspectingWorker = worker is null ? new SuccessfulWorker() : null;
+            var effectiveWorker = worker ?? inspectingWorker!;
+            return new(path, new(store, effectiveWorker, new ScriptedVerifier(results), learning), learning, inspectingWorker);
         }
 
         public ValueTask DisposeAsync()
@@ -84,8 +115,33 @@ public sealed class LoopCoordinatorTests
 
     private sealed class SuccessfulWorker : ILoopWorker
     {
+        public LoopWorkRequest? LastRequest { get; private set; }
+
+        public Task<LoopWorkResult> ExecuteAsync(LoopWorkRequest request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(new LoopWorkResult(
+                true,
+                request.Contract.FanOut.RequiredRoles.Select(role => $"cas://evidence/worker/{request.Attempt}/{role}").ToArray(),
+                request.IsRepair ? "repair" : "feature",
+                request.Contract.ContractId,
+                request.Contract.ContextBundleId,
+                request.Contract.OutputSchema,
+                request.Contract.FanOut.RequiredRoles));
+        }
+    }
+
+    private sealed class InvalidWorker : ILoopWorker
+    {
         public Task<LoopWorkResult> ExecuteAsync(LoopWorkRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult(new LoopWorkResult(true, [$"cas://evidence/worker/{request.Attempt}"], request.IsRepair ? "repair" : "feature"));
+            Task.FromResult(new LoopWorkResult(
+                true,
+                request.Contract.FanOut.RequiredRoles.Select(role => $"cas://evidence/worker/1/{role}").ToArray(),
+                "invalid",
+                request.Contract.ContractId,
+                request.Contract.ContextBundleId,
+                request.Contract.OutputSchema,
+                ["research"]));
     }
 
     private sealed class ScriptedVerifier(IReadOnlyList<VerificationRunResult> results) : ILoopVerifier
