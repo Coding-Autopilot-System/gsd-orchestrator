@@ -23,4 +23,13 @@
   <ItemGroup>
     <ProjectReference Include="..\GsdOrchestrator\GsdOrchestrator.csproj" />
   </ItemGroup>
+
+  <!-- Vendored pinned cas-contracts v1.1 schema release, copied next to the test
+       assembly so ContractCompatibilityTests can read it at runtime. Keeps the
+       consumer-side contract check self-contained and offline (no NuGet validator). -->
+  <ItemGroup>
+    <Content Include="Contracts\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

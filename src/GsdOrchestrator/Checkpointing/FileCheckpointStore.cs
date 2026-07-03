@@ -41,7 +41,7 @@ public sealed class FileCheckpointStore : ICheckpointStore
 
     public FileCheckpointStore(string repoRoot, ILogger<FileCheckpointStore> logger)
     {
-        _stateDir   = Path.Combine(repoRoot, ".gsd", "state");
+        _stateDir = Path.Combine(repoRoot, ".gsd", "state");
         _archiveDir = Path.GetFullPath(Path.Combine(repoRoot, ".gsd", "archive"));
         _logger = logger;
         Directory.CreateDirectory(_stateDir);

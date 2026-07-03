@@ -1,7 +1,7 @@
+using System.Text.Json;
 using GsdOrchestrator.Checkpointing;
 using GsdOrchestrator.Workflows.Models;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Text.Json;
 using Xunit;
 
 namespace GsdOrchestrator.Tests.States;
@@ -87,7 +87,7 @@ public class CheckpointStoreAdditionalTests : IDisposable
         var ctx = BuildContext("namespaced-wf", owner: "myorg", repo: "myrepo");
         await _store.SaveAsync(ctx);
 
-        // Load by just the workflowId — should find via namespaced scan
+        // Load by just the workflowId â€” should find via namespaced scan
         var loaded = await _store.LoadAsync("namespaced-wf");
 
         Assert.NotNull(loaded);

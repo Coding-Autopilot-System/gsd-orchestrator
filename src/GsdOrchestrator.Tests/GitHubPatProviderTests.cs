@@ -6,7 +6,7 @@ using Xunit;
 namespace GsdOrchestrator.Tests;
 
 /// <summary>
-/// Tests for GitHubPatProvider — reads GitHub PAT from IConfiguration.
+/// Tests for GitHubPatProvider â€” reads GitHub PAT from IConfiguration.
 /// </summary>
 public class GitHubPatProviderTests
 {

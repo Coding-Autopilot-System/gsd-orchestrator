@@ -21,9 +21,12 @@ public sealed class NativeProcessCommandExecutor(string workingDirectory) : IVer
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = check.Command[0], WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true, RedirectStandardError = true,
-                UseShellExecute = false, CreateNoWindow = true
+                FileName = check.Command[0],
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             }
         };
         foreach (var argument in check.Command.Skip(1)) process.StartInfo.ArgumentList.Add(argument);

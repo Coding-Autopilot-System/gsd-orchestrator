@@ -189,20 +189,20 @@ public sealed class SqliteGoalStore : IGoalStore
     }
 
     private static async Task DeleteGoalRowsAsync(SqliteConnection c, SqliteTransaction t, string table, string goalId, CancellationToken ct)
-    { await using var command = c.CreateCommand(); command.Transaction=t; command.CommandText=$"DELETE FROM {table} WHERE goal_id=$goal"; command.Parameters.AddWithValue("$goal",goalId); await command.ExecuteNonQueryAsync(ct); }
+    { await using var command = c.CreateCommand(); command.Transaction = t; command.CommandText = $"DELETE FROM {table} WHERE goal_id=$goal"; command.Parameters.AddWithValue("$goal", goalId); await command.ExecuteNonQueryAsync(ct); }
 
     private static async Task<T?> LoadOneAsync<T>(SqliteConnection c, string table, string id, CancellationToken ct)
-    { await using var command=c.CreateCommand(); command.CommandText=$"SELECT json FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id",id); var json=Convert.ToString(await command.ExecuteScalarAsync(ct)); return json is null ? default : JsonSerializer.Deserialize<T>(json,JsonOptions); }
+    { await using var command = c.CreateCommand(); command.CommandText = $"SELECT json FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id", id); var json = Convert.ToString(await command.ExecuteScalarAsync(ct)); return json is null ? default : JsonSerializer.Deserialize<T>(json, JsonOptions); }
 
     private static async Task<IReadOnlyList<T>> LoadManyAsync<T>(SqliteConnection c, string table, string goalId, CancellationToken ct)
-    { await using var command=c.CreateCommand(); command.CommandText=$"SELECT json FROM {table} WHERE goal_id=$goal ORDER BY id"; command.Parameters.AddWithValue("$goal",goalId); await using var reader=await command.ExecuteReaderAsync(ct); var result=new List<T>(); while(await reader.ReadAsync(ct)) result.Add(JsonSerializer.Deserialize<T>(reader.GetString(0),JsonOptions)!); return result; }
+    { await using var command = c.CreateCommand(); command.CommandText = $"SELECT json FROM {table} WHERE goal_id=$goal ORDER BY id"; command.Parameters.AddWithValue("$goal", goalId); await using var reader = await command.ExecuteReaderAsync(ct); var result = new List<T>(); while (await reader.ReadAsync(ct)) result.Add(JsonSerializer.Deserialize<T>(reader.GetString(0), JsonOptions)!); return result; }
 
     private static async Task<T?> LoadProjectionAsync<T>(SqliteConnection c, SqliteTransaction t, string table, string id, CancellationToken ct)
-    { await using var command=c.CreateCommand(); command.Transaction=t; command.CommandText=$"SELECT json FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id",id); var json=Convert.ToString(await command.ExecuteScalarAsync(ct)); return json is null ? default : JsonSerializer.Deserialize<T>(json,JsonOptions); }
+    { await using var command = c.CreateCommand(); command.Transaction = t; command.CommandText = $"SELECT json FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id", id); var json = Convert.ToString(await command.ExecuteScalarAsync(ct)); return json is null ? default : JsonSerializer.Deserialize<T>(json, JsonOptions); }
 
     private static async Task<IReadOnlyList<T>> LoadAllAsync<T>(SqliteConnection c, SqliteTransaction t, string table, CancellationToken ct)
-    { await using var command=c.CreateCommand(); command.Transaction=t; command.CommandText=$"SELECT json FROM {table} ORDER BY id"; await using var reader=await command.ExecuteReaderAsync(ct); var result=new List<T>(); while(await reader.ReadAsync(ct)) result.Add(JsonSerializer.Deserialize<T>(reader.GetString(0),JsonOptions)!); return result; }
+    { await using var command = c.CreateCommand(); command.Transaction = t; command.CommandText = $"SELECT json FROM {table} ORDER BY id"; await using var reader = await command.ExecuteReaderAsync(ct); var result = new List<T>(); while (await reader.ReadAsync(ct)) result.Add(JsonSerializer.Deserialize<T>(reader.GetString(0), JsonOptions)!); return result; }
 
     private static async Task DeleteByIdAsync(SqliteConnection c, SqliteTransaction t, string table, string id, CancellationToken ct)
-    { await using var command=c.CreateCommand(); command.Transaction=t; command.CommandText=$"DELETE FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id",id); await command.ExecuteNonQueryAsync(ct); }
+    { await using var command = c.CreateCommand(); command.Transaction = t; command.CommandText = $"DELETE FROM {table} WHERE id=$id"; command.Parameters.AddWithValue("$id", id); await command.ExecuteNonQueryAsync(ct); }
 }

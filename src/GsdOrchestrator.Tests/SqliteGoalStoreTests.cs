@@ -1,6 +1,6 @@
+using System.Text.Json;
 using GsdOrchestrator.Scheduling;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Text.Json;
 using Xunit;
 
 namespace GsdOrchestrator.Tests;

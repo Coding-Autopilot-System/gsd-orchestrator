@@ -15,7 +15,13 @@ public sealed class GoalControlPlaneTests : IDisposable
         var aggregate = GoalFixtures.CompleteAggregate() with
         {
             Goal = GoalFixtures.CompleteAggregate().Goal with { Status = GoalStatus.Planned },
-            Transitions = [], Events = [], Evidence = [], Leases = [], BudgetReservations = [], Attempts = [], IdempotencyKeys = []
+            Transitions = [],
+            Events = [],
+            Evidence = [],
+            Leases = [],
+            BudgetReservations = [],
+            Attempts = [],
+            IdempotencyKeys = []
         };
 
         await sut.StartAsync(aggregate);

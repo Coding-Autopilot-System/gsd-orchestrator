@@ -1,0 +1,35 @@
+{
+  "version": "1.1.0",
+  "schemas": [
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/common.schema.json",
+      "path": "common.schema.json",
+      "sha256": "078026d60c219658fe0fc5cf7c4f786acdcf0c492121f7d688d5078b33ca25af"
+    },
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/phase-execution-request.schema.json",
+      "path": "phase-execution-request.schema.json",
+      "sha256": "927ffda5ba809e58627ba25b3275355644b510b0ae1c76f446aa7b7f291f08fd"
+    },
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/phase-execution-result.schema.json",
+      "path": "phase-execution-result.schema.json",
+      "sha256": "1d353e20cf6338c2de4a9bec0bad83ca0dec6c9feb5434c5e6264fdc075e7c25"
+    },
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/phase-verification-result.schema.json",
+      "path": "phase-verification-result.schema.json",
+      "sha256": "ec5b97a2bf75892530442f666d23a8b6dbb8f13bda0efe49553d3f64cd41b995"
+    },
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/sdlc-lifecycle-event.schema.json",
+      "path": "sdlc-lifecycle-event.schema.json",
+      "sha256": "bd955637761679d3b6e8ee09fb7b693b1d0362615b0865204c5ae3bacb3809dc"
+    },
+    {
+      "id": "https://schemas.coding-autopilot.dev/v1.1/sdlc-profile.schema.json",
+      "path": "sdlc-profile.schema.json",
+      "sha256": "f4974e911e7cb88191c1a331470c8cd7a79d1c7311c963dd70cd9c8f524ebe45"
+    }
+  ]
+}
