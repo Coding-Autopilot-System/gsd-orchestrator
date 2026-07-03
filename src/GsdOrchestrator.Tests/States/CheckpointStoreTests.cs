@@ -88,7 +88,8 @@ public class CheckpointStoreTests : IDisposable
         {
             WorkflowId = "wf-roundtrip",
             Issue = new IssueContext(7, "Round trip", "body", [], "owner", "repo", "main"),
-            CurrentState = WorkflowState.Branching
+            CurrentState = WorkflowState.Branching,
+            SdlcRun = SdlcRunRecord.Create("wf-roundtrip", "Round trip", SdlcProfile.CasSdlcV1)
         };
         await _store.SaveAsync(ctx);
 
@@ -97,6 +98,34 @@ public class CheckpointStoreTests : IDisposable
         Assert.NotNull(loaded);
         Assert.Equal(WorkflowState.Branching, loaded!.CurrentState);
         Assert.Equal(7, loaded.Issue!.Number);
+        Assert.NotNull(loaded.SdlcRun);
+        Assert.Equal("wf-roundtrip", loaded.SdlcRun!.RunId);
+        Assert.Equal("understand", loaded.SdlcRun.CurrentPhaseId);
+    }
+
+    [Fact]
+    public async Task SaveAsync_ThenLoadAsync_PreservesVerificationOutcome()
+    {
+        var ctx = new GsdWorkflowContext
+        {
+            WorkflowId = "wf-verification",
+            Issue = new IssueContext(7, "Verification", "body", [], "owner", "repo", "main"),
+            SdlcRun = SdlcRunRecord.Create("wf-verification", "Verification", SdlcProfile.CasSdlcV1)
+        }.WithSdlcVerification(new SdlcVerificationOutcome(
+            "research",
+            "repo-verifier",
+            Passed: false,
+            InvalidatedPhaseIds: ["understand"],
+            Reason: "research evidence missing"));
+
+        await _store.SaveAsync(ctx);
+        var loaded = await _store.LoadAsync("wf-verification");
+
+        Assert.NotNull(loaded);
+        Assert.NotNull(loaded!.SdlcRun);
+        Assert.Equal("understand", loaded.SdlcRun!.RollbackOrigin);
+        Assert.Equal("research evidence missing", loaded.SdlcRun.RollbackReason);
+        Assert.Equal(1, loaded.SdlcRun.NoProgressCount);
     }
 
     // CHECKPOINT-02: missing checkpoint returns null

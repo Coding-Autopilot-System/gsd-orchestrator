@@ -40,7 +40,7 @@ public class GsdStateMachineTests
         var state = Substitute.For<IWorkflowState>();
         state.State.Returns(from);
         state.ExecuteAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
-            .Returns(ci => Task.FromResult(ci.Arg<GsdWorkflowContext>() with { CurrentState = to }));
+            .Returns(ci => Task.FromResult(ci.Arg<GsdWorkflowContext>().Transition(to)));
         return state;
     }
 
@@ -84,15 +84,17 @@ public class GsdStateMachineTests
     }
 
     [Fact]
-    public async Task RunAsync_NoHandlerForState_ThrowsInvalidOperationException()
+    public async Task RunAsync_NoHandlerForState_ReturnsFailedContext()
     {
         var checkpoints = Substitute.For<ICheckpointStore>();
 
         // No states registered — Idle has no handler, throws before SaveAsync
         var sut = BuildSut(checkpoints, []);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.RunAsync("owner", "repo", 1, triageModeOnly: false, CancellationToken.None));
+        var ctx = await sut.RunAsync("owner", "repo", 1, triageModeOnly: false, CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Failed, ctx.CurrentState);
+        Assert.Equal(TerminalStopReason.Unknown, ctx.StopReason);
     }
 
     [Fact]
@@ -114,6 +116,197 @@ public class GsdStateMachineTests
         // SaveAsync: before Idle (×1) + before Analyzing (×1) + final checkpoint (×1) = 3
         await checkpoints.Received(3).SaveAsync(
             Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunAsync_FailedState_RecordsRollbackOriginAndReason()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var idleState = Substitute.For<IWorkflowState>();
+        idleState.State.Returns(WorkflowState.Idle);
+        idleState.ExecuteAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("simulated failure"));
+
+        var sut = BuildSut(checkpoints, [idleState]);
+
+        var ctx = await sut.RunAsync("owner", "repo", 1, triageModeOnly: false, CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Failed, ctx.CurrentState);
+        Assert.NotNull(ctx.SdlcRun);
+        Assert.Equal("simulated failure", ctx.SdlcRun!.RollbackReason);
+        Assert.Equal("understand", ctx.SdlcRun.RollbackOrigin);
+        Assert.Equal(1, ctx.SdlcRun.NoProgressCount);
+    }
+
+    [Fact]
+    public async Task RunAsync_AdvancesSdlcBudgets_DuringExecution()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        checkpoints.ArchiveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var idleState = MakeState(WorkflowState.Idle, WorkflowState.Done);
+        var sut = BuildSut(checkpoints, [idleState]);
+
+        var ctx = await sut.RunAsync("owner", "repo", 11, triageModeOnly: false, CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Done, ctx.CurrentState);
+        Assert.NotNull(ctx.SdlcRun);
+        Assert.Equal(1, ctx.SdlcRun!.AttemptCount);
+        Assert.Equal(1, ctx.SdlcRun.IterationCount);
+        Assert.Equal(1, ctx.SdlcRun.ModelCallCount);
+    }
+
+    [Fact]
+    public async Task ResumeAsync_FailedState_RequestsRollbackAndResumes()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "rollback-wf",
+            CurrentState = WorkflowState.Analyzing,
+            Issue = new IssueContext(7, "Test issue", "", [], "owner", "repo", "main")
+        }.WithSdlcRun("Rollback test");
+        checkpoints.LoadAsync("rollback-wf", Arg.Any<CancellationToken>())
+            .Returns(savedCtx);
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        checkpoints.ArchiveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var analyzingState = Substitute.For<IWorkflowState>();
+        analyzingState.State.Returns(WorkflowState.Analyzing);
+        analyzingState.ExecuteAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("verify failed"));
+
+        var idleState = MakeState(WorkflowState.Idle, WorkflowState.Done);
+        var sut = BuildSut(checkpoints, [idleState, analyzingState]);
+
+        var ctx = await sut.ResumeAsync("rollback-wf", CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Done, ctx.CurrentState);
+        Assert.NotNull(ctx.SdlcRun);
+        Assert.Equal("understand", ctx.SdlcRun!.RollbackOrigin);
+        Assert.Equal("verify failed", ctx.SdlcRun.RollbackReason);
+        Assert.Null(ctx.PendingRollback);
+    }
+
+    [Fact]
+    public async Task RunAsync_DoneState_RecordsMemoryCandidateAndTerminalOutcome()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        checkpoints.ArchiveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var idleState = MakeState(WorkflowState.Idle, WorkflowState.Done);
+        var sut = BuildSut(checkpoints, [idleState]);
+
+        var ctx = await sut.RunAsync("owner", "repo", 12, triageModeOnly: false, CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Done, ctx.CurrentState);
+        Assert.NotNull(ctx.SdlcRun);
+        Assert.Equal("passed", ctx.SdlcRun!.TerminalOutcome);
+        Assert.NotNull(ctx.SdlcRun.MemoryCandidateRecords);
+        Assert.NotEmpty(ctx.SdlcRun.MemoryCandidateRecords!);
+        Assert.Equal("update-memory", ctx.SdlcRun.MemoryCandidateRecords![0].PhaseId);
+    }
+
+    [Fact]
+    public async Task RunAsync_GoalAttemptBudgetExceeded_SetsTypedStopReason()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "wf-budget",
+            CurrentState = WorkflowState.Idle,
+            Issue = new IssueContext(1, "Budget", "", [], "owner", "repo", "main"),
+            SdlcRun = SdlcRunRecord.Create("wf-budget", "Budget", SdlcProfile.CasSdlcV1) with
+            {
+                AttemptCount = SdlcProfile.CasSdlcV1.GoalAttempts + 1
+            }
+        };
+        checkpoints.LoadAsync("wf-budget", Arg.Any<CancellationToken>())
+            .Returns(savedCtx);
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var idleState = Substitute.For<IWorkflowState>();
+        idleState.State.Returns(WorkflowState.Idle);
+        idleState.ExecuteAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(ci => Task.FromResult(ci.Arg<GsdWorkflowContext>().Transition(WorkflowState.Done)));
+
+        var sut = BuildSut(checkpoints, [idleState]);
+
+        var ctx = await sut.ResumeAsync("wf-budget", CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Failed, ctx.CurrentState);
+        Assert.Equal(TerminalStopReason.BudgetExhausted, ctx.StopReason);
+    }
+
+    [Fact]
+    public async Task RunAsync_RuntimeMinuteBudgetExceeded_SetsTypedStopReason()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "wf-runtime",
+            CurrentState = WorkflowState.Idle,
+            Issue = new IssueContext(1, "Runtime", "", [], "owner", "repo", "main"),
+            SdlcRun = SdlcRunRecord.Create("wf-runtime", "Runtime", SdlcProfile.CasSdlcV1) with
+            {
+                StartedAt = DateTimeOffset.UtcNow.AddMinutes(-(SdlcProfile.CasSdlcV1.RuntimeMinutes + 1))
+            }
+        };
+        checkpoints.LoadAsync("wf-runtime", Arg.Any<CancellationToken>())
+            .Returns(savedCtx);
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var idleState = Substitute.For<IWorkflowState>();
+        idleState.State.Returns(WorkflowState.Idle);
+        idleState.ExecuteAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>())
+            .Returns(ci => Task.FromResult(ci.Arg<GsdWorkflowContext>().Transition(WorkflowState.Done)));
+
+        var sut = BuildSut(checkpoints, [idleState]);
+
+        var ctx = await sut.ResumeAsync("wf-runtime", CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Failed, ctx.CurrentState);
+        Assert.Equal(TerminalStopReason.RuntimeExceeded, ctx.StopReason);
+    }
+
+    [Fact]
+    public void RecordTerminalOutcome_IsIdempotent()
+    {
+        var run = SdlcRunRecord.Create("wf-terminal", "Terminal", SdlcProfile.CasSdlcV1);
+
+        var once = run.RecordTerminalOutcome("passed");
+        var twice = once.RecordTerminalOutcome("failed");
+
+        Assert.Equal("passed", once.TerminalOutcome);
+        Assert.Equal("passed", twice.TerminalOutcome);
+    }
+
+    [Fact]
+    public void RecordVerification_PersistsInvalidatedPhases()
+    {
+        var run = SdlcRunRecord.Create("wf-invalidated", "Invalidated", SdlcProfile.CasSdlcV1);
+        var updated = run.RecordVerification(new SdlcVerificationRecord(
+            "research",
+            "repo-verifier",
+            Passed: false,
+            InvalidatedPhaseIds: ["understand", "research"],
+            Reason: "missing evidence"));
+
+        Assert.Equal(["understand", "research"], updated.InvalidatedPhaseIds);
+        Assert.Single(updated.Verifications!);
     }
 
     [Fact]
@@ -175,4 +368,5 @@ public class GsdStateMachineTests
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => sut.RunAsync("owner", "repo", 1, triageModeOnly: false, cts.Token));
     }
+
 }
