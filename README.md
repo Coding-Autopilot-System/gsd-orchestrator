@@ -1,5 +1,8 @@
 # GSD Orchestrator
 
+[![CI](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml) [![CodeQL](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/codeql.yml/badge.svg)](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/codeql.yml)
+
+
 Autonomous GitHub issue-to-PR engine. Point it at a real issue and it reads the
 task, plans the work, creates a branch, edits code, validates the result, and
 opens a pull request with durable workflow state.
