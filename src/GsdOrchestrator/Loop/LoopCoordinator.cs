@@ -10,7 +10,12 @@ namespace GsdOrchestrator.Loop;
 public sealed record LoopToolScope(bool MutationAllowed, string MutationOwner, IReadOnlyList<string> AllowedTools);
 public sealed record LoopStepInput(string Name, string Value);
 public sealed record LoopCompletionCriterion(string Id, string Description, bool Mandatory);
-public sealed record LoopFanOutPlan(int MaxConcurrency, IReadOnlyList<string> RequiredRoles, string AggregatorRole);
+public sealed record LoopFanOutBranch(string Role, IReadOnlyList<string> DependsOnRoles, IReadOnlyList<string> ExpectedArtifacts, bool RepositoryMutationAllowed = false, string? MergeStrategy = null);
+public sealed record LoopFanInRule(string RuleSet, IReadOnlyList<string> RequiredRoles, bool RequireAllRequiredSucceeded);
+public sealed record LoopFanOutPlan(int MaxConcurrency, IReadOnlyList<LoopFanOutBranch> Branches, LoopFanInRule Aggregation, string AggregatorRole)
+{
+    public IReadOnlyList<string> RequiredRoles => Branches.Select(branch => branch.Role).ToArray();
+}
 public sealed record LoopStepContract(
     string ContractId,
     string ContextBundleId,
@@ -30,7 +35,11 @@ public sealed record LoopWorkResult(
     string ContextBundleId,
     string OutputSchema,
     IReadOnlyList<string> Roles,
+    IReadOnlyList<LoopBranchResult> BranchResults,
+    LoopFanInState FanIn,
     int PeakConcurrency = 1);
+public sealed record LoopBranchResult(string Role, string Status, IReadOnlyList<string> EvidenceUris, bool Required);
+public sealed record LoopFanInState(string AggregatorRole, IReadOnlyList<LoopBranchResult> Branches, bool AllRequiredTerminal, bool AllRequiredSucceeded);
 public sealed record TerminalLoopOutcome(string GoalId, string CorrelationId, GoalStatus Status, string Summary, IReadOnlyList<string> EvidenceUris);
 public sealed record LoopRunResult(GoalAggregate Aggregate, int WorkerAttempts, int VerificationRuns, bool RepairCreated, int PeakConcurrency);
 
@@ -86,10 +95,10 @@ public sealed class MafProcessLoopWorker(string pythonExecutable, string mafRoot
             throw new InvalidOperationException($"MAF worker context bundle mismatch. Expected {request.Contract.ContextBundleId}, received {envelope.ContextBundleId}.");
         if (!string.Equals(envelope.OutputSchema, request.Contract.OutputSchema, StringComparison.Ordinal))
             throw new InvalidOperationException($"MAF worker output schema mismatch. Expected {request.Contract.OutputSchema}, received {envelope.OutputSchema}.");
-        return new(envelope.Succeeded, envelope.EvidenceUris, envelope.Summary, envelope.ContractId, envelope.ContextBundleId, envelope.OutputSchema, envelope.Roles, envelope.PeakConcurrency);
+        return new(envelope.Succeeded, envelope.EvidenceUris, envelope.Summary, envelope.ContractId, envelope.ContextBundleId, envelope.OutputSchema, envelope.Roles, envelope.BranchResults, envelope.FanIn, envelope.PeakConcurrency);
     }
 
-    private sealed record MafWorkerEnvelope(bool Succeeded, int PeakConcurrency, string[] Roles, string[] EvidenceUris, string Summary, string ContractId, string ContextBundleId, string OutputSchema);
+    private sealed record MafWorkerEnvelope(bool Succeeded, int PeakConcurrency, string[] Roles, string[] EvidenceUris, string Summary, string ContractId, string ContextBundleId, string OutputSchema, LoopBranchResult[] BranchResults, LoopFanInState FanIn);
 }
 
 public sealed class McpTerminalOutcomePublisher(McpToolDispatcher dispatcher) : ITerminalOutcomePublisher
@@ -128,6 +137,7 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
             throw new InvalidOperationException($"Goal '{goalId}' cannot execute from {aggregate.Goal.Status}.");
         var workItem = aggregate.WorkItems.SingleOrDefault(item => item.Status is WorkItemStatus.Pending or WorkItemStatus.Ready)
             ?? throw new InvalidOperationException($"Goal '{goalId}' has no executable work item.");
+        LoopPolicyGuard.ValidateFanOutPlan(aggregate.Goal.Limits, BuildContract(aggregate, workItem, 1, false).FanOut);
         var now = DateTimeOffset.UtcNow;
         var lease = await store.TryAcquireLeaseAsync(new(
             goalId, workItem.Id, "loop-coordinator", now, now.AddMinutes(5),
@@ -206,6 +216,7 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
         CancellationToken cancellationToken)
     {
         var contract = BuildContract(aggregate, workItem, attemptNumber, isRepair);
+        LoopPolicyGuard.ValidateFanOutPlan(aggregate.Goal.Limits, contract.FanOut);
         var request = new LoopWorkRequest(aggregate.Goal.Id, workItem.Id, attemptNumber, isRepair, aggregate.Goal.CorrelationId, contract);
         var result = await worker.ExecuteAsync(request, cancellationToken);
         ValidateWorkResult(contract, result);
@@ -230,6 +241,8 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
                     contract.DownstreamConsumer,
                     contract.OutputSchema,
                     contract.FanOut.RequiredRoles,
+                    Branches = contract.FanOut.Branches,
+                    Aggregation = contract.FanOut.Aggregation,
                     contract.FanOut.MaxConcurrency,
                     contract.ToolScope.MutationAllowed,
                 }),
@@ -238,6 +251,7 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
                     result.ContractId,
                     result.ContextBundleId,
                     result.Roles,
+                    result.FanIn,
                     result.PeakConcurrency,
                     result.Summary,
                 })
@@ -257,11 +271,31 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
         var actual = new HashSet<string>(result.Roles, StringComparer.Ordinal);
         if (!required.SetEquals(actual))
             throw new InvalidOperationException("Loop worker returned a role set that does not match the declared step contract.");
+        if (!string.Equals(result.FanIn.AggregatorRole, contract.FanOut.AggregatorRole, StringComparison.Ordinal))
+            throw new InvalidOperationException("Loop worker returned a fan-in aggregator that does not match the declared step contract.");
+        if (!result.FanIn.AllRequiredTerminal || !result.FanIn.AllRequiredSucceeded)
+            throw new InvalidOperationException("Loop worker returned a non-terminal or degraded required fan-in state.");
+        var branchRoles = result.BranchResults.Select(branch => branch.Role).ToHashSet(StringComparer.Ordinal);
+        if (!required.SetEquals(branchRoles))
+            throw new InvalidOperationException("Loop worker returned branch results that do not match the declared specialist set.");
+        if (result.BranchResults.Any(branch => !branch.Required))
+            throw new InvalidOperationException("Loop worker returned optional branches outside the declared required fan-out.");
+        if (result.BranchResults.Any(branch => branch.EvidenceUris.Count == 0))
+            throw new InvalidOperationException("Loop worker returned a branch result without evidence.");
+        if (result.BranchResults.Any(branch => branch.Status is not ("succeeded" or "failed" or "cancelled" or "timed_out")))
+            throw new InvalidOperationException("Loop worker returned a non-terminal branch result.");
     }
 
     private static LoopStepContract BuildContract(GoalAggregate aggregate, WorkItemRecord workItem, int attemptNumber, bool isRepair)
     {
         var phase = isRepair ? "repair" : "feature";
+        var branches = new[]
+        {
+            new LoopFanOutBranch("research", [], [$"cas://artifact/{workItem.Id}/research/summary"]),
+            new LoopFanOutBranch("architecture", ["research"], [$"cas://artifact/{workItem.Id}/architecture/plan"]),
+            new LoopFanOutBranch("security", ["research", "architecture"], [$"cas://artifact/{workItem.Id}/security/review"]),
+            new LoopFanOutBranch("test", ["architecture"], [$"cas://artifact/{workItem.Id}/test/coverage"])
+        };
         return new LoopStepContract(
             ContractId: $"{aggregate.Goal.Id}:{workItem.Id}:attempt-{attemptNumber}",
             ContextBundleId: $"{aggregate.Goal.CorrelationId}:{workItem.Id}:{phase}:{attemptNumber}",
@@ -271,7 +305,11 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
             DownstreamConsumer: "loop_verifier",
             OutputSchema: "cas.loop.step-result.v1",
             ToolScope: new LoopToolScope(false, "implementation-owner", ["read_repo", "search_repo"]),
-            FanOut: new LoopFanOutPlan(aggregate.Goal.Limits.MaxFanOut, ["research", "architecture", "security", "test"], "loop_verifier"),
+            FanOut: new LoopFanOutPlan(
+                aggregate.Goal.Limits.MaxFanOut,
+                branches,
+                new LoopFanInRule("all_required_terminal", branches.Select(branch => branch.Role).ToArray(), true),
+                "loop_verifier"),
             Inputs:
             [
                 new("goalId", aggregate.Goal.Id),
@@ -361,5 +399,47 @@ public static class LoopPolicyGuard
         if (!ApprovalActions.Contains(action, StringComparer.Ordinal))
             throw new ArgumentOutOfRangeException(nameof(action), action, "Unknown external action.");
         return approved ? ExternalActionDecision.Authorized : ExternalActionDecision.WaitingApproval;
+    }
+
+    public static void ValidateFanOutPlan(ExecutionLimits limits, LoopFanOutPlan plan)
+    {
+        if (plan.MaxConcurrency < 1)
+            throw new InvalidOperationException("Loop fan-out plan must declare a positive max concurrency.");
+        if (plan.MaxConcurrency > limits.MaxFanOut)
+            throw new InvalidOperationException("Loop fan-out plan exceeds the goal concurrency policy.");
+        if (!string.Equals(plan.AggregatorRole, "loop_verifier", StringComparison.Ordinal))
+            throw new InvalidOperationException("Loop fan-out plan must route through loop_verifier.");
+        if (plan.Branches.Count == 0)
+            throw new InvalidOperationException("Loop fan-out plan requires at least one branch.");
+
+        var roles = plan.Branches.Select(branch => branch.Role).ToArray();
+        if (roles.Length != roles.Distinct(StringComparer.Ordinal).Count())
+            throw new InvalidOperationException("Loop fan-out plan cannot declare duplicate branch roles.");
+        if (!roles.SequenceEqual(["research", "architecture", "security", "test"], StringComparer.Ordinal))
+            throw new InvalidOperationException("Loop fan-out plan must declare the canonical specialist role set in order.");
+
+        var roleSet = new HashSet<string>(roles, StringComparer.Ordinal);
+        foreach (var branch in plan.Branches)
+        {
+            if (branch.ExpectedArtifacts.Count == 0)
+                throw new InvalidOperationException($"Loop fan-out branch '{branch.Role}' must declare at least one expected artifact.");
+            foreach (var dependency in branch.DependsOnRoles)
+            {
+                if (!roleSet.Contains(dependency))
+                    throw new InvalidOperationException($"Loop fan-out branch '{branch.Role}' references unknown dependency '{dependency}'.");
+                if (string.Equals(branch.Role, dependency, StringComparison.Ordinal))
+                    throw new InvalidOperationException($"Loop fan-out branch '{branch.Role}' cannot depend on itself.");
+            }
+        }
+
+        var mutatingBranches = plan.Branches.Where(branch => branch.RepositoryMutationAllowed).ToArray();
+        if (mutatingBranches.Length > 1 && mutatingBranches.Any(branch => string.IsNullOrWhiteSpace(branch.MergeStrategy)))
+            throw new InvalidOperationException("Loop fan-out plan cannot assign multiple mutation owners without an explicit merge strategy.");
+
+        var aggregatedRoles = plan.Aggregation.RequiredRoles.ToArray();
+        if (!aggregatedRoles.SequenceEqual(roles, StringComparer.Ordinal))
+            throw new InvalidOperationException("Loop fan-out aggregation must require the declared branch roles in canonical order.");
+        if (!string.Equals(plan.Aggregation.RuleSet, "all_required_terminal", StringComparison.Ordinal) || !plan.Aggregation.RequireAllRequiredSucceeded)
+            throw new InvalidOperationException("Loop fan-out aggregation must require all required roles to terminate successfully.");
     }
 }
