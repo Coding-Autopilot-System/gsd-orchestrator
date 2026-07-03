@@ -11,9 +11,9 @@ public class CheckpointStoreSchemaVersionTests : IDisposable
     private readonly string _tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")[..12]);
     private FileCheckpointStore Sut() => new(_tmp, NullLogger<FileCheckpointStore>.Instance);
 
-    // LoadAsync exact path, schema mismatch => returns null (line 79)
+    // Unsupported checkpoint versions fail clearly instead of looking missing.
     [Fact]
-    public async Task Load_ExactPath_WrongSchema_ReturnsNull()
+    public async Task Load_ExactPath_UnsupportedSchema_ThrowsInvalidDataException()
     {
         var sut = Sut();
         var ctx = new GsdWorkflowContext { WorkflowId = "wf1",
@@ -22,9 +22,29 @@ public class CheckpointStoreSchemaVersionTests : IDisposable
         var stateDir = Path.Combine(_tmp, ".gsd", "state");
         var file = Directory.GetFiles(stateDir, "*wf1*.json").First();
         var json = await File.ReadAllTextAsync(file);
-        await File.WriteAllTextAsync(file, json.Replace("\"1.0\"", "\"0.9\""));
-        var loaded = await sut.LoadAsync("wf1");
-        Assert.Null(loaded);
+        await File.WriteAllTextAsync(file, json.Replace("\"1.1\"", "\"0.9\""));
+        var error = await Assert.ThrowsAsync<InvalidDataException>(() => sut.LoadAsync("wf1"));
+        Assert.Contains("0.9", error.Message);
+    }
+
+    [Fact]
+    public async Task Load_LegacyNonFailedCheckpoint_UpgradesSchema()
+    {
+        var sut = Sut();
+        var ctx = new GsdWorkflowContext
+        {
+            SchemaVersion = "1.0",
+            WorkflowId = "legacy-v1",
+            Issue = new IssueContext(1, "t", "b", [], "o", "r", "main"),
+            CurrentState = WorkflowState.Analyzing
+        };
+        await sut.SaveAsync(ctx);
+
+        var loaded = await sut.LoadAsync(ctx.WorkflowId);
+
+        Assert.NotNull(loaded);
+        Assert.Equal("1.1", loaded!.SchemaVersion);
+        Assert.Equal(WorkflowState.Analyzing, loaded.CurrentState);
     }
 
     // LoadAsync namespaced scan single candidate loads correctly (line 89)

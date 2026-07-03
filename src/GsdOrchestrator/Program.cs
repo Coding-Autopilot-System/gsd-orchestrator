@@ -5,6 +5,7 @@ using GsdOrchestrator.Checkpointing;
 using GsdOrchestrator.Mcp;
 using GsdOrchestrator.Workflows;
 using GsdOrchestrator.Workflows.Models;
+using GsdOrchestrator.Workflows.Services;
 using GsdOrchestrator.Workflows.States;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
@@ -115,6 +116,11 @@ builder.Services.AddSingleton<ICheckpointStore>(sp =>
     var repoRoot = Directory.GetCurrentDirectory();
     return new FileCheckpointStore(repoRoot, cpLogger);
 });
+builder.Services.AddSingleton<IWatchStateStore>(sp =>
+    new FileWatchStateStore(
+        Directory.GetCurrentDirectory(),
+        sp.GetRequiredService<ILogger<FileWatchStateStore>>()));
+builder.Services.AddSingleton<WatchCoordinator>();
 
 // ── Workflow states ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IWorkflowState, IdleState>();
@@ -150,17 +156,11 @@ using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
 
 var mcpDispatcher = host.Services.GetRequiredService<McpToolDispatcher>();
+var watchCoordinator = host.Services.GetRequiredService<WatchCoordinator>();
 
 if (watchMode)
 {
-    // MULTI-02: process all configured repos in sequence
-    foreach (var repoConfig in repos)
-    {
-        if (cts.Token.IsCancellationRequested) break;
-        logger.LogInformation("Starting watch for {Owner}/{Repo}", repoConfig.Owner, repoConfig.Repo);
-        await RunWatchModeAsync(sm, mcpDispatcher, repoConfig.Owner, repoConfig.Repo,
-            repoConfig.RateLimitDelaySeconds, logger, cts.Token);
-    }
+    await RunWatchModeAsync(sm, mcpDispatcher, watchCoordinator, repos, logger, cts.Token);
 }
 else if (prNumber is not null)
 {
@@ -185,70 +185,66 @@ await (mcp as IAsyncDisposable)!.DisposeAsync();
 
 // ── Watch mode ──────────────────────────────────────────────────────────────────
 static async Task RunWatchModeAsync(
-    GsdStateMachine sm, McpToolDispatcher mcpDispatcher,
-    string owner, string repo,
-    int rateLimitDelaySeconds,
+    GsdStateMachine sm,
+    McpToolDispatcher mcpDispatcher,
+    WatchCoordinator coordinator,
+    IReadOnlyList<RepoConfig> repositories,
     ILogger<Program> logger, CancellationToken ct)
 {
     var pollInterval = TimeSpan.FromMinutes(5);
-    // Bounded set: keep only the last 500 processed issue numbers to avoid unbounded growth.
-    // When full, the oldest 100 entries are evicted so re-opened issues can be reprocessed.
-    const int processedIssuesCapacity = 500;
-    const int processedIssuesEvictCount = 100;
-    var processedIssues = new HashSet<int>();
-    logger.LogInformation("Watch mode started — polling {Owner}/{Repo} every {Interval}m", owner, repo, pollInterval.TotalMinutes);
+    logger.LogInformation(
+        "Watch mode started for {RepositoryCount} repositories; interval {IntervalMinutes}m",
+        repositories.Count,
+        pollInterval.TotalMinutes);
 
     while (!ct.IsCancellationRequested)
     {
         try
         {
-            // List open issues via MCP
-            var result = await mcpDispatcher.CallAsync("list_issues", new System.Text.Json.Nodes.JsonObject
-            {
-                ["owner"] = owner,
-                ["repo"] = repo,
-                ["state"] = "open",
-                ["perPage"] = 20
-            }, ct);
-
-            var issues = result.ParseInnerJson()?.AsArray() ?? [];
-            var openNumbers = issues
-                .Select(i => i?["number"]?.GetValue<int>())
-                .Where(n => n.HasValue)
-                .Select(n => n!.Value)
-                .ToList();
-
-            var pending = openNumbers.Except(processedIssues).ToList();
-            logger.LogInformation("Watch: {Open} open issues, {Pending} unprocessed", openNumbers.Count, pending.Count);
-
-            foreach (var num in pending)
-            {
-                if (ct.IsCancellationRequested) break;
-                logger.LogInformation("Processing issue #{Number}", num);
-                // triageModeOnly: false — watch mode always runs the full workflow
-                var ctx = await sm.RunAsync(owner, repo, num, triageModeOnly: false, ct);
-                if (processedIssues.Count >= processedIssuesCapacity)
+            var interval = await coordinator.PollOnceAsync(
+                repositories,
+                async (repository, cancellationToken) =>
                 {
-                    // Evict oldest entries to keep set bounded
-                    foreach (var old in processedIssues.Take(processedIssuesEvictCount).ToList())
-                        processedIssues.Remove(old);
-                }
-                processedIssues.Add(num);
-                PrintResult(ctx);
-                // MULTI-04: configurable rate limit delay between issues within same poll cycle
-                if (num != pending.Last())
+                    var result = await mcpDispatcher.CallAsync(
+                        "list_issues",
+                        new System.Text.Json.Nodes.JsonObject
+                        {
+                            ["owner"] = repository.Owner,
+                            ["repo"] = repository.Repo,
+                            ["state"] = "open",
+                            ["perPage"] = 20
+                        },
+                        cancellationToken);
+                    return result.ParseInnerJson()?.AsArray()
+                        .Select(issue => issue?["number"]?.GetValue<int>())
+                        .Where(number => number.HasValue)
+                        .Select(number => number!.Value)
+                        .ToList() ?? [];
+                },
+                async (repository, issue, cancellationToken) =>
                 {
-                    logger.LogInformation("Rate limit delay: {Seconds}s before next issue", rateLimitDelaySeconds);
-                    try { await Task.Delay(TimeSpan.FromSeconds(rateLimitDelaySeconds), ct); }
-                    catch (OperationCanceledException) { break; }
-                }
-            }
+                    logger.LogInformation(
+                        "Processing {Owner}/{Repo} issue #{IssueNumber}",
+                        repository.Owner,
+                        repository.Repo,
+                        issue);
+                    var context = await sm.RunAsync(
+                        repository.Owner,
+                        repository.Repo,
+                        issue,
+                        triageModeOnly: false,
+                        cancellationToken);
+                    PrintResult(context);
+                    return context.CurrentState == WorkflowState.Done;
+                },
+                ct);
+
+            logger.LogInformation(
+                "Watch interval complete: {SuccessfulRepositories}/{RepositoryCount} repositories healthy",
+                interval.Repositories.Count(repository => repository.Error is null),
+                interval.Repositories.Count);
         }
-        catch (OperationCanceledException) { break; }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Watch loop error — retrying in {Interval}m", pollInterval.TotalMinutes);
-        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
 
         try { await Task.Delay(pollInterval, ct); }
         catch (OperationCanceledException) { break; }

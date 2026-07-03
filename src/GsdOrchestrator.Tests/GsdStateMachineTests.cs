@@ -335,6 +335,80 @@ public class GsdStateMachineTests
     }
 
     [Fact]
+    public async Task ResumeAsync_RecoverableFailure_ReentersFailedStateWithoutReplayingHistory()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var priorTransition = new StateTransitionEvent(
+            WorkflowState.Idle,
+            WorkflowState.Analyzing,
+            DateTimeOffset.UtcNow.AddMinutes(-1));
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "recoverable-wf",
+            CurrentState = WorkflowState.Failed,
+            FailedState = WorkflowState.Analyzing,
+            RetryCount = 0,
+            FailureReason = "transient failure",
+            Issue = new IssueContext(7, "Test issue", "", [], "owner", "repo", "main"),
+            History = [priorTransition]
+        };
+        checkpoints.LoadAsync(savedCtx.WorkflowId, Arg.Any<CancellationToken>()).Returns(savedCtx);
+        checkpoints.SaveAsync(Arg.Any<GsdWorkflowContext>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        checkpoints.ArchiveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+
+        var analyzing = MakeState(WorkflowState.Analyzing, WorkflowState.Done);
+        var sut = BuildSut(checkpoints, [analyzing]);
+
+        var result = await sut.ResumeAsync(savedCtx.WorkflowId, CancellationToken.None);
+
+        Assert.Equal(WorkflowState.Done, result.CurrentState);
+        Assert.Contains(result.History, transition =>
+            transition.From == WorkflowState.Failed && transition.To == WorkflowState.Analyzing);
+        Assert.Contains(priorTransition, result.History);
+        await analyzing.Received(1).ExecuteAsync(
+            Arg.Is<GsdWorkflowContext>(context => context.CurrentState == WorkflowState.Analyzing && context.RetryCount == 1),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResumeAsync_RetryExhausted_ThrowsClearError()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "exhausted-wf",
+            CurrentState = WorkflowState.Failed,
+            FailedState = WorkflowState.Analyzing,
+            RetryCount = 1
+        };
+        checkpoints.LoadAsync(savedCtx.WorkflowId, Arg.Any<CancellationToken>()).Returns(savedCtx);
+        var sut = BuildSut(checkpoints, []);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.ResumeAsync(savedCtx.WorkflowId, CancellationToken.None));
+
+        Assert.Contains("retry limit", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ResumeAsync_LegacyFailedCheckpoint_ThrowsClearError()
+    {
+        var checkpoints = Substitute.For<ICheckpointStore>();
+        var savedCtx = new GsdWorkflowContext
+        {
+            WorkflowId = "legacy-failed-wf",
+            CurrentState = WorkflowState.Failed
+        };
+        checkpoints.LoadAsync(savedCtx.WorkflowId, Arg.Any<CancellationToken>()).Returns(savedCtx);
+        var sut = BuildSut(checkpoints, []);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => sut.ResumeAsync(savedCtx.WorkflowId, CancellationToken.None));
+
+        Assert.Contains("recoverable state", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task ResumeAsync_NoCheckpointExists_ThrowsInvalidOperationException()
     {
         var checkpoints = Substitute.For<ICheckpointStore>();
