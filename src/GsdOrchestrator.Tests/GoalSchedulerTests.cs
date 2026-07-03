@@ -96,7 +96,10 @@ public sealed class GoalSchedulerTests : IDisposable
                 new WorkItemRecord("work-2", "goal-1", "org/repo", "local", WorkItemStatus.Ready, 3, "idem-2")
             ],
             Dependencies = [new DependencyRecord("goal-1", "work-2", "work-1")],
-            Attempts = [], Leases = [], BudgetReservations = [], IdempotencyKeys = []
+            Attempts = [],
+            Leases = [],
+            BudgetReservations = [],
+            IdempotencyKeys = []
         };
     }
 
@@ -110,7 +113,11 @@ public sealed class GoalSchedulerTests : IDisposable
                 new WorkItemRecord("work-1", "goal-1", "org/repo", "local", WorkItemStatus.Ready, 3, "idem-1"),
                 new WorkItemRecord("work-2", "goal-1", "org/repo", "local", WorkItemStatus.Ready, 3, "idem-2")
             ],
-            Dependencies = [], Attempts = [], Leases = [], BudgetReservations = [], IdempotencyKeys = []
+            Dependencies = [],
+            Attempts = [],
+            Leases = [],
+            BudgetReservations = [],
+            IdempotencyKeys = []
         };
     }
 

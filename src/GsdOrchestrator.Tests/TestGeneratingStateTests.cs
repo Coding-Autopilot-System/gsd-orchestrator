@@ -63,7 +63,8 @@ public class TestGeneratingStateTests
     {
         var llm = Substitute.For<IChatClient>();
         var stopResponse = new ChatResponse(
-            new ChatMessage(ChatRole.Assistant, "no tests needed")) { FinishReason = ChatFinishReason.Stop };
+            new ChatMessage(ChatRole.Assistant, "no tests needed"))
+        { FinishReason = ChatFinishReason.Stop };
         llm.GetResponseAsync(
                 Arg.Any<IEnumerable<ChatMessage>>(),
                 Arg.Any<ChatOptions?>(),

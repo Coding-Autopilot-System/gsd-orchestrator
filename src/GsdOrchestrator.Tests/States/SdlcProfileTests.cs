@@ -25,7 +25,7 @@ public class SdlcProfileTests
     {
         var ctx = new GsdWorkflowContext();
 
-        Assert.Equal("1.0", ctx.SchemaVersion);
+        Assert.Equal("1.1", ctx.SchemaVersion);
         Assert.Equal(SdlcProfile.CasSdlcV1, ctx.SdlcProfile);
     }
 

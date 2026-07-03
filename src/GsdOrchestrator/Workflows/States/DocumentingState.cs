@@ -238,8 +238,10 @@ public sealed class DocumentingState : IWorkflowState
             {
                 var cur = await _mcp.CallAsync("get_file_contents", new JsonObject
                 {
-                    ["owner"] = issue.RepoOwner, ["repo"] = issue.RepoName,
-                    ["path"] = path, ["ref"] = branch
+                    ["owner"] = issue.RepoOwner,
+                    ["repo"] = issue.RepoName,
+                    ["path"] = path,
+                    ["ref"] = branch
                 }, ct);
                 var sha = cur.ParseInnerJson()?["sha"]?.GetValue<string>();
                 if (sha is not null) args["sha"] = sha;

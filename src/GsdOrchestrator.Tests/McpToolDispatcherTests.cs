@@ -83,7 +83,7 @@ public class McpToolDispatcherTests
         try { await sut.CallAsync("tool", new JsonObject()); } catch { }
         try { await sut.CallAsync("tool", new JsonObject()); } catch { }
 
-        // Circuit is now open — next call should get the wrapped McpException
+        // Circuit is now open â€” next call should get the wrapped McpException
         var ex = await Assert.ThrowsAsync<McpException>(
             () => sut.CallAsync("tool", new JsonObject(), CancellationToken.None));
         Assert.False(ex.IsTransient);
