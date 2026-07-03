@@ -30,6 +30,12 @@ jobs:
       - name: Build tests
         run: dotnet build src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --no-restore --configuration Release
 
+      - name: Contract compatibility (pinned cas-contracts v1.1)
+        # Consumer-side gate: fails red if SdlcProfile.CasSdlcV1 or the vendored v1.1
+        # schema release drifts from the pinned cas-contracts contract. See
+        # src/GsdOrchestrator.Tests/ContractCompatibilityTests.cs.
+        run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~ContractCompatibilityTests"
+
       - name: Test
         run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --logger trx --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
