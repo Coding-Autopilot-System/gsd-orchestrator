@@ -22,6 +22,13 @@ jobs:
         shell: python
         run: |
           import hashlib, json, os, pathlib, urllib.request
+
+          def canonical_bytes(data: bytes) -> bytes:
+              return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+
+          def sha256_hex(data: bytes) -> str:
+              return hashlib.sha256(canonical_bytes(data)).hexdigest()
+
           base = os.environ["REGISTRY_BASE"]
           version = os.environ["PINNED_VERSION"]
           root = pathlib.Path(os.environ["VENDORED_ROOT"])
@@ -33,9 +40,11 @@ jobs:
               manifest = json.load(response)
           for entry in manifest["schemas"]:
               local = (root / entry["path"]).read_bytes()
-              if hashlib.sha256(local).hexdigest() != entry["sha256"]:
+              if sha256_hex(local) != entry["sha256"]:
                   raise SystemExit(f"vendored digest drift: {entry['path']}")
               with urllib.request.urlopen(f"{base}/releases/v{version}/{entry['path']}", timeout=20) as response:
                   published = response.read()
-              if published != local:
+              if sha256_hex(published) != entry["sha256"]:
+                  raise SystemExit(f"published digest drift: {entry['path']}")
+              if canonical_bytes(published) != canonical_bytes(local):
                   raise SystemExit(f"published content drift: {entry['path']}")
