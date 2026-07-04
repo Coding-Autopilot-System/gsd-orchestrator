@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.coding-autopilot.dev/v1.1/phase-execution-request.schema.json",
+  "$id": "https://coding-autopilot-system.github.io/cas-contracts/registry/v1.1/phase-execution-request.schema.json",
   "title": "PhaseExecutionRequest",
   "type": "object",
   "allOf": [
