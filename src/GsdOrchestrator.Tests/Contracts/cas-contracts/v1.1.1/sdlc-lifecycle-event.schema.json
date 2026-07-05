@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://coding-autopilot-system.github.io/cas-contracts/registry/v1.1/sdlc-lifecycle-event.schema.json",
+  "$id": "https://schemas.coding-autopilot.dev/v1.1/sdlc-lifecycle-event.schema.json",
   "title": "SdlcLifecycleEvent",
   "type": "object",
   "allOf": [

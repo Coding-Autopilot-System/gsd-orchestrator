@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GsdOrchestrator.Workflows.Models;
@@ -18,8 +19,8 @@ namespace GsdOrchestrator.Tests;
 /// check self-contained and offline (no JSON-Schema validator NuGet dependency).
 ///
 /// Cross-repo reference note: cas-contracts is a separate repo. In isolated CI only
-/// this repo is checked out, so the pinned v1.1.0 release is vendored under
-/// GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.0/ (same convention as the
+/// this repo is checked out, so the pinned v1.1.1 release is vendored under
+/// GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.1/ (same convention as the
 /// Python consumers). When the sibling ../cas-contracts checkout is present
 /// (local dev), an extra test asserts the vendored copy has not drifted upstream.
 /// </summary>
@@ -27,14 +28,25 @@ public class ContractCompatibilityTests
 {
     // The cas-contracts version this consumer targets. Kept in lockstep with the
     // vendored release and with SdlcProfile.CasSdlcV1.ProfileVersion.
+    private const string PinnedReleaseVersion = "1.1.1";
     private const string PinnedSchemaVersion = "1.1.0";
     private const string PinnedProfileVersion = "v1.1";
 
     private static string ContractRoot { get; } = Path.Combine(
-        AppContext.BaseDirectory, "Contracts", "cas-contracts", $"v{PinnedSchemaVersion}");
+        AppContext.BaseDirectory, "Contracts", "cas-contracts", $"v{PinnedReleaseVersion}");
 
     private static JsonNode LoadSchema(string name) =>
         JsonNode.Parse(File.ReadAllText(Path.Combine(ContractRoot, name)))!;
+
+    private static byte[] ReadCanonicalUtf8Bytes(string path)
+    {
+        var text = File.ReadAllText(path);
+        var normalized = text.ReplaceLineEndings("\n");
+        return Encoding.UTF8.GetBytes(normalized);
+    }
+
+    private static string Sha256Hex(byte[] bytes) =>
+        Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
     /// <summary>Walk up from the test output directory to find a sibling
     /// cas-contracts/registry/releases/v{version} checkout, or null if absent.</summary>
@@ -44,7 +56,7 @@ public class ContractCompatibilityTests
         while (dir is not null)
         {
             var candidate = Path.Combine(
-                dir.FullName, "cas-contracts", "registry", "releases", $"v{PinnedSchemaVersion}");
+                dir.FullName, "cas-contracts", "registry", "releases", $"v{PinnedReleaseVersion}");
             if (Directory.Exists(candidate))
             {
                 return candidate;
@@ -115,15 +127,38 @@ public class ContractCompatibilityTests
     public void VendoredRelease_MatchesManifestHashes()
     {
         var manifest = LoadSchema("manifest.json");
-        Assert.Equal(PinnedSchemaVersion, (string?)manifest["version"]);
+        Assert.Equal(PinnedReleaseVersion, (string?)manifest["version"]);
 
         foreach (var entry in manifest["schemas"]!.AsArray())
         {
             var path = (string)entry!["path"]!;
             var expected = (string)entry["sha256"]!;
-            var bytes = File.ReadAllBytes(Path.Combine(ContractRoot, path));
-            var actual = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+            var bytes = ReadCanonicalUtf8Bytes(Path.Combine(ContractRoot, path));
+            var actual = Sha256Hex(bytes);
             Assert.Equal(expected, actual);
+        }
+    }
+
+    [Fact]
+    public void CanonicalSchemaDigest_IgnoresLineEndings()
+    {
+        var crlfPath = Path.GetTempFileName();
+        var lfPath = Path.GetTempFileName();
+
+        try
+        {
+            File.WriteAllText(crlfPath, "{\r\n  \"name\": \"schema\"\r\n}\r\n", new UTF8Encoding(false));
+            File.WriteAllText(lfPath, "{\n  \"name\": \"schema\"\n}\n", new UTF8Encoding(false));
+
+            var crlf = Sha256Hex(ReadCanonicalUtf8Bytes(crlfPath));
+            var lf = Sha256Hex(ReadCanonicalUtf8Bytes(lfPath));
+
+            Assert.Equal(crlf, lf);
+        }
+        finally
+        {
+            File.Delete(crlfPath);
+            File.Delete(lfPath);
         }
     }
 
@@ -214,8 +249,8 @@ public class ContractCompatibilityTests
         {
             var upstream = Path.Combine(upstreamRoot, Path.GetFileName(file));
             Assert.True(File.Exists(upstream), $"upstream missing {Path.GetFileName(file)}");
-            var local = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file)));
-            var remote = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(upstream)));
+            var local = Sha256Hex(ReadCanonicalUtf8Bytes(file));
+            var remote = Sha256Hex(ReadCanonicalUtf8Bytes(upstream));
             Assert.Equal(remote, local);
         }
     }

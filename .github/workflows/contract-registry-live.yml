@@ -1,0 +1,50 @@
+name: Contract registry live drift
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-v1-1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Compare published v1.1.1 release with vendored contracts
+        env:
+          REGISTRY_BASE: https://coding-autopilot-system.github.io/cas-contracts/registry
+          PINNED_VERSION: 1.1.1
+          VENDORED_ROOT: src/GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.1
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, urllib.request
+
+          def canonical_bytes(data: bytes) -> bytes:
+              return data.replace(b"\r\n", b"\n")
+
+          def sha256_hex(data: bytes) -> str:
+              return hashlib.sha256(canonical_bytes(data)).hexdigest()
+
+          base = os.environ["REGISTRY_BASE"]
+          version = os.environ["PINNED_VERSION"]
+          root = pathlib.Path(os.environ["VENDORED_ROOT"])
+          with urllib.request.urlopen(f"{base}/index.json", timeout=20) as response:
+              index = json.load(response)
+          if version not in index.get("releases", []):
+              raise SystemExit(f"published registry is missing release {version}")
+          with urllib.request.urlopen(f"{base}/releases/v{version}/manifest.json", timeout=20) as response:
+              manifest = json.load(response)
+          for entry in manifest["schemas"]:
+              local = (root / entry["path"]).read_bytes()
+              if sha256_hex(local) != entry["sha256"]:
+                  raise SystemExit(f"vendored digest drift: {entry['path']}")
+              with urllib.request.urlopen(f"{base}/releases/v{version}/{entry['path']}", timeout=20) as response:
+                  published = response.read()
+              if sha256_hex(published) != entry["sha256"]:
+                  raise SystemExit(f"published digest drift: {entry['path']}")
+              if canonical_bytes(published) != canonical_bytes(local):
+                  raise SystemExit(f"published content drift: {entry['path']}")

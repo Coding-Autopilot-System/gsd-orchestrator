@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://coding-autopilot-system.github.io/cas-contracts/registry/v1.1/common.schema.json",
+  "$id": "https://schemas.coding-autopilot.dev/v1.1/common.schema.json",
   "title": "CAS Common Definitions v1.1",
   "$defs": {
     "actor": {

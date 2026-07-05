@@ -53,7 +53,8 @@ All configuration is environment-variable driven (`.env` or shell):
 ## Build & Test
 
 ```powershell
-dotnet build src/GsdOrchestrator.sln
+dotnet build src/GsdOrchestrator/GsdOrchestrator.csproj
+dotnet build src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj
 dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj
 ```
 
