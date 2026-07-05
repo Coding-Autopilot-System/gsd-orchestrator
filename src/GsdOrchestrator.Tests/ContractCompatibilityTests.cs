@@ -19,8 +19,8 @@ namespace GsdOrchestrator.Tests;
 /// check self-contained and offline (no JSON-Schema validator NuGet dependency).
 ///
 /// Cross-repo reference note: cas-contracts is a separate repo. In isolated CI only
-/// this repo is checked out, so the pinned v1.1.0 release is vendored under
-/// GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.0/ (same convention as the
+/// this repo is checked out, so the pinned v1.1.1 release is vendored under
+/// GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.1/ (same convention as the
 /// Python consumers). When the sibling ../cas-contracts checkout is present
 /// (local dev), an extra test asserts the vendored copy has not drifted upstream.
 /// </summary>
@@ -28,11 +28,12 @@ public class ContractCompatibilityTests
 {
     // The cas-contracts version this consumer targets. Kept in lockstep with the
     // vendored release and with SdlcProfile.CasSdlcV1.ProfileVersion.
+    private const string PinnedReleaseVersion = "1.1.1";
     private const string PinnedSchemaVersion = "1.1.0";
     private const string PinnedProfileVersion = "v1.1";
 
     private static string ContractRoot { get; } = Path.Combine(
-        AppContext.BaseDirectory, "Contracts", "cas-contracts", $"v{PinnedSchemaVersion}");
+        AppContext.BaseDirectory, "Contracts", "cas-contracts", $"v{PinnedReleaseVersion}");
 
     private static JsonNode LoadSchema(string name) =>
         JsonNode.Parse(File.ReadAllText(Path.Combine(ContractRoot, name)))!;
@@ -55,7 +56,7 @@ public class ContractCompatibilityTests
         while (dir is not null)
         {
             var candidate = Path.Combine(
-                dir.FullName, "cas-contracts", "registry", "releases", $"v{PinnedSchemaVersion}");
+                dir.FullName, "cas-contracts", "registry", "releases", $"v{PinnedReleaseVersion}");
             if (Directory.Exists(candidate))
             {
                 return candidate;
@@ -126,13 +127,13 @@ public class ContractCompatibilityTests
     public void VendoredRelease_MatchesManifestHashes()
     {
         var manifest = LoadSchema("manifest.json");
-        Assert.Equal(PinnedSchemaVersion, (string?)manifest["version"]);
+        Assert.Equal(PinnedReleaseVersion, (string?)manifest["version"]);
 
         foreach (var entry in manifest["schemas"]!.AsArray())
         {
             var path = (string)entry!["path"]!;
             var expected = (string)entry["sha256"]!;
-            var bytes = ReadCanonicalUtf8Bytes(Path.Combine(ContractRoot, path));
+            var bytes = File.ReadAllBytes(Path.Combine(ContractRoot, path));
             var actual = Sha256Hex(bytes);
             Assert.Equal(expected, actual);
         }

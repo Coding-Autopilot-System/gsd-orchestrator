@@ -14,11 +14,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - name: Compare published v1.1.0 release with vendored contracts
+      - name: Compare published v1.1.1 release with vendored contracts
         env:
           REGISTRY_BASE: https://coding-autopilot-system.github.io/cas-contracts/registry
-          PINNED_VERSION: 1.1.0
-          VENDORED_ROOT: src/GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.0
+          PINNED_VERSION: 1.1.1
+          VENDORED_ROOT: src/GsdOrchestrator.Tests/Contracts/cas-contracts/v1.1.1
         shell: python
         run: |
           import hashlib, json, os, pathlib, urllib.request
@@ -27,7 +27,7 @@ jobs:
               return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
           def sha256_hex(data: bytes) -> str:
-              return hashlib.sha256(canonical_bytes(data)).hexdigest()
+              return hashlib.sha256(data).hexdigest()
 
           base = os.environ["REGISTRY_BASE"]
           version = os.environ["PINNED_VERSION"]

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.coding-autopilot.dev/v1.1/common.schema.json",
+  "title": "CAS Common Definitions v1.1",
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "type": {
+          "type": "string",
+          "enum": ["human", "agent", "service", "workflow"]
+        },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "traceContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["traceparent"],
+      "properties": {
+        "traceparent": {
+          "type": "string",
+          "pattern": "^[\\da-f]{2}-[\\da-f]{32}-[\\da-f]{16}-[\\da-f]{2}$"
+        },
+        "tracestate": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "lifecycleMetadata": {
+      "type": "object",
+      "required": [
+        "correlationId",
+        "promptId",
+        "runId",
+        "repo",
+        "actor",
+        "timestamp",
+        "schemaVersion",
+        "traceContext"
+      ],
+      "properties": {
+        "correlationId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "promptId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "runId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "actor": { "$ref": "#/$defs/actor" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "schemaVersion": { "const": "1.1.0" },
+        "traceContext": { "$ref": "#/$defs/traceContext" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "uri"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "uri": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[\\da-f]{64}$" }
+      }
+    },
+    "phaseId": {
+      "type": "string",
+      "enum": [
+        "understand",
+        "research",
+        "analyze",
+        "plan",
+        "risk-assessment",
+        "implement",
+        "verify",
+        "review",
+        "improve",
+        "document",
+        "update-memory",
+        "finished"
+      ]
+    },
+    "executionBatch": {
+      "type": "string",
+      "enum": ["discovery", "design", "change", "assurance", "closure"]
+    },
+    "phaseStatus": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "ready",
+        "running",
+        "passed",
+        "failed",
+        "invalidated",
+        "rolled-back",
+        "waiting",
+        "terminal"
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.coding-autopilot.dev/v1.1/sdlc-lifecycle-event.schema.json",
+  "title": "SdlcLifecycleEvent",
+  "type": "object",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/lifecycleMetadata" },
+    {
+      "type": "object",
+      "required": ["kind", "eventType", "phase"],
+      "properties": {
+        "kind": { "const": "SdlcLifecycleEvent" },
+        "eventType": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "phase": { "$ref": "common.schema.json#/$defs/phaseId" },
+        "batch": { "$ref": "common.schema.json#/$defs/executionBatch" },
+        "status": { "$ref": "common.schema.json#/$defs/phaseStatus" },
+        "message": { "type": "string", "maxLength": 5000 },
+        "evidence": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/evidence" } }
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}
