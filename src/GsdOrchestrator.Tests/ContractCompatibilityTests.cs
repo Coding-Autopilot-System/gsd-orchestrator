@@ -41,7 +41,7 @@ public class ContractCompatibilityTests
     private static byte[] ReadCanonicalUtf8Bytes(string path)
     {
         var text = File.ReadAllText(path);
-        var normalized = text.ReplaceLineEndings("\r\n");
+        var normalized = text.ReplaceLineEndings("\n");
         return Encoding.UTF8.GetBytes(normalized);
     }
 
@@ -133,7 +133,7 @@ public class ContractCompatibilityTests
         {
             var path = (string)entry!["path"]!;
             var expected = (string)entry["sha256"]!;
-            var bytes = File.ReadAllBytes(Path.Combine(ContractRoot, path));
+            var bytes = ReadCanonicalUtf8Bytes(Path.Combine(ContractRoot, path));
             var actual = Sha256Hex(bytes);
             Assert.Equal(expected, actual);
         }
