@@ -26,7 +26,8 @@ public sealed class FileCheckpointStore : ICheckpointStore
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
     };
 
     /// <summary>
@@ -53,7 +54,10 @@ public sealed class FileCheckpointStore : ICheckpointStore
         var tmp = path + ".tmp";
 
         await using (var fs = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
             await JsonSerializer.SerializeAsync(fs, ctx, JsonOpts, ct);
+            fs.Flush(flushToDisk: true);
+        }
 
         // Atomic rename — prevents partial writes leaving corrupt checkpoints
         File.Move(tmp, path, overwrite: true);
