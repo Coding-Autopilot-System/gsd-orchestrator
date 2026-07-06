@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Declarative coverlet configuration for the "XPlat Code Coverage" DataCollector.
+  Centralizes boilerplate-exclusion decisions (26-CONTEXT.md: 100% LOGICAL branch
+  coverage; framework boilerplate ignored via standard attributes/pragmas) instead
+  of scattering them across ad-hoc CLI flags.
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <SkipAutoProps>true</SkipAutoProps>
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/obj/**,**/*.g.cs,**/Program.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
