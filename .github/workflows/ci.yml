@@ -40,7 +40,7 @@ jobs:
         run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~ContractCompatibilityTests"
 
       - name: Test
-        run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --logger trx --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test src/GsdOrchestrator.Tests/GsdOrchestrator.Tests.csproj --configuration Release --logger trx --no-build --settings coverlet.runsettings --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
@@ -48,3 +48,32 @@ jobs:
         with:
           name: coverage-results
           path: TestResults/
+
+      - name: Enforce branch coverage (ratchet)
+        shell: pwsh
+        run: |
+          # Ratcheted branch-coverage gate (Phase 26-01). Reads branch-rate (NOT
+          # line-rate) from the cobertura report produced by coverlet's "XPlat
+          # Code Coverage" collector and fails if it regresses below the last
+          # measured baseline. Baseline is raised only when new tests push
+          # coverage strictly higher (see 26-01-SUMMARY.md for history).
+          $Baseline = 0.7314
+
+          $coverageFile = Get-ChildItem -Path TestResults -Recurse -Filter "coverage.cobertura.xml" | Select-Object -First 1
+
+          if (-not $coverageFile) {
+            Write-Output '{"event":"ci_failure","error":"Coverage file not found"}'
+            exit 1
+          }
+
+          [xml]$xml = Get-Content $coverageFile.FullName
+          $rate = [double]$xml.coverage.'branch-rate'
+          $percent = [math]::Round($rate * 100, 2)
+          $requiredPercent = [math]::Round($Baseline * 100, 2)
+
+          if ($rate -lt $Baseline) {
+            Write-Output "{`"event`":`"ci_failure`",`"metric`":`"branch-rate`",`"coverage_percent`":$percent,`"required`":$requiredPercent}"
+            exit 1
+          }
+
+          Write-Output "{`"event`":`"ci_success`",`"metric`":`"branch-rate`",`"coverage_percent`":$percent,`"required`":$requiredPercent}"

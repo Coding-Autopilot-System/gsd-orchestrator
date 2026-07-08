@@ -11,6 +11,9 @@ obj/
 .vs/
 *.suo
 
+# Coverage / test run output
+TestResults/
+
 # NuGet
 *.nupkg
 packages/
