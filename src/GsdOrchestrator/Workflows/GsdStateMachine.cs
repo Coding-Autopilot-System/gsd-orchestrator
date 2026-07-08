@@ -235,7 +235,7 @@ public sealed class GsdStateMachine
                         InvalidatedPhaseIds: [phase.RollbackTo ?? phase.Id],
                         Reason: failureReason));
                 }
-                if (ctx.PendingRollback is not null)
+                if (ctx.PendingRollback is not null && ex is not McpException)
                 {
                     _logger.LogWarning(
                         "Workflow {WorkflowId} rollback requested from {FromPhase} to {ToPhase}: {Reason}",
