@@ -36,7 +36,7 @@ async Task<PilotEvidence> RunCoordinatorScenario(string scenario, IReadOnlyList<
         await store.SaveAsync(Seed($"goal-{scenario}"));
         var learning = new CapturingLearning();
         var worker = new MafProcessLoopWorker(arguments.Python, arguments.MafRoot);
-        var coordinator = new LoopCoordinator(store, worker, new ScriptedVerifier(results), learning);
+        var coordinator = new LoopCoordinator(store, worker, new ScriptedVerifier(results), learning, NullLogger<LoopCoordinator>.Instance);
         var run = await coordinator.RunAsync($"goal-{scenario}", new(true, 0, 2, 0, 2, 0, 10));
         var peak = run.PeakConcurrency;
         var isolatedImplementation = scenario != "feature" || VerifyIsolatedWorktree();

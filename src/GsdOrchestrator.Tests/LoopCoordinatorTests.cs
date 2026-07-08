@@ -39,6 +39,23 @@ public sealed class LoopCoordinatorTests
     }
 
     [Fact]
+    public async Task RunAsync_Converts_Worker_Exception_Into_Typed_Failure_State()
+    {
+        await using var fixture = await Fixture.CreateAsync([Passed()], worker: new ThrowingWorker(new TimeoutException("worker timeout")));
+
+        var result = await fixture.Coordinator.RunAsync("goal-1", Budget());
+
+        Assert.Equal(GoalStatus.Failed, result.Aggregate.Goal.Status);
+        Assert.Contains(result.Aggregate.Evidence, item => item.Kind == "failure-state");
+        var failureEvent = Assert.Single(result.Aggregate.Events, item => item.Type == "goal.failed");
+        Assert.Contains("Transient", failureEvent.PayloadJson);
+        Assert.Contains("worker timeout", failureEvent.PayloadJson);
+        Assert.Single(fixture.Learning.Outcomes);
+        Assert.Contains("worker timeout", fixture.Learning.Outcomes[0].Summary);
+        Assert.Equal(GoalStatus.Failed, fixture.Learning.Outcomes[0].Status);
+    }
+
+    [Fact]
     public void PolicyGuard_DeniesEnvironmentAndHoldsExternalActions()
     {
         Assert.Throws<UnauthorizedAccessException>(() => LoopPolicyGuard.RequireReadablePath("repo/.env"));
@@ -60,14 +77,14 @@ public sealed class LoopCoordinatorTests
 
         private Fixture(string path, LoopCoordinator coordinator, CapturingLearning learning) => (_path, Coordinator, Learning) = (path, coordinator, learning);
 
-        public static async Task<Fixture> CreateAsync(IReadOnlyList<VerificationRunResult> results)
+        public static async Task<Fixture> CreateAsync(IReadOnlyList<VerificationRunResult> results, ILoopWorker? worker = null)
         {
             var path = Path.Combine(Path.GetTempPath(), $"loop-{Guid.NewGuid():N}.db");
             var store = new SqliteGoalStore(path, NullLogger<SqliteGoalStore>.Instance);
             await store.InitializeAsync();
             await store.SaveAsync(Aggregate());
             var learning = new CapturingLearning();
-            return new(path, new(store, new SuccessfulWorker(), new ScriptedVerifier(results), learning), learning);
+            return new(path, new(store, worker ?? new SuccessfulWorker(), new ScriptedVerifier(results), learning, NullLogger<LoopCoordinator>.Instance), learning);
         }
 
         public ValueTask DisposeAsync()
@@ -86,6 +103,12 @@ public sealed class LoopCoordinatorTests
     {
         public Task<LoopWorkResult> ExecuteAsync(LoopWorkRequest request, CancellationToken cancellationToken) =>
             Task.FromResult(new LoopWorkResult(true, [$"cas://evidence/worker/{request.Attempt}"], request.IsRepair ? "repair" : "feature"));
+    }
+
+    private sealed class ThrowingWorker(Exception exception) : ILoopWorker
+    {
+        public Task<LoopWorkResult> ExecuteAsync(LoopWorkRequest request, CancellationToken cancellationToken) =>
+            Task.FromException<LoopWorkResult>(exception);
     }
 
     private sealed class ScriptedVerifier(IReadOnlyList<VerificationRunResult> results) : ILoopVerifier

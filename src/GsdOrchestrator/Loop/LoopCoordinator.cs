@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using GsdOrchestrator.Mcp;
 using GsdOrchestrator.Scheduling;
 using GsdOrchestrator.Verification;
+using Microsoft.Extensions.Logging;
 
 namespace GsdOrchestrator.Loop;
 
@@ -87,7 +88,7 @@ public sealed class McpTerminalOutcomePublisher(McpToolDispatcher dispatcher) : 
     }
 }
 
-public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopVerifier verifier, ITerminalOutcomePublisher learning)
+public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopVerifier verifier, ITerminalOutcomePublisher learning, ILogger<LoopCoordinator> logger)
 {
     public async Task<LoopRunResult> RunAsync(
         string goalId,
@@ -107,55 +108,93 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
             ?? throw new InvalidOperationException($"Work item '{workItem.Id}' could not be leased.");
 
         aggregate = (await store.LoadAsync(goalId, cancellationToken))!;
-        var first = await ExecuteAttemptAsync(aggregate, workItem, 1, false, cancellationToken);
-        aggregate = first.Aggregate;
-        var workerAttempts = 1;
-        var peakConcurrency = first.Work.PeakConcurrency;
+        var workerAttempts = 0;
+        var peakConcurrency = 0;
         var verificationRuns = 0;
         var repairCreated = false;
 
-        if (first.Work.Succeeded)
+        try
         {
-            var verification = await verifier.VerifyAsync(goalId, first.Work, cancellationToken);
-            verificationRuns++;
-            aggregate = AddVerification(aggregate, workItem.Id, verification);
-            if (verification.Outcome == VerificationOutcome.Failed)
+            var first = await ExecuteAttemptAsync(aggregate, workItem, 1, false, cancellationToken);
+            aggregate = first.Aggregate;
+            workerAttempts = 1;
+            peakConcurrency = first.Work.PeakConcurrency;
+
+            if (first.Work.Succeeded)
             {
-                var consumedBudget = repairBudget with
+                var verification = await verifier.VerifyAsync(goalId, first.Work, cancellationToken);
+                verificationRuns++;
+                aggregate = AddVerification(aggregate, workItem.Id, verification);
+                if (verification.Outcome == VerificationOutcome.Failed)
                 {
-                    ConsumedAttempts = Math.Max(repairBudget.ConsumedAttempts, 1),
-                    ConsumedIterations = Math.Max(repairBudget.ConsumedIterations, 1),
-                };
-                var repair = RepairPolicy.CreateRepair(verification, consumedBudget, workItem.Id);
-                if (repair is not null)
-                {
-                    repairCreated = true;
-                    aggregate = AddEvent(aggregate, "repair.created", $"attempt-{repair.AttemptNumber}");
-                    await store.SaveAsync(aggregate, cancellationToken);
-                    var repaired = await ExecuteAttemptAsync(aggregate, workItem, repair.AttemptNumber, true, cancellationToken);
-                    aggregate = repaired.Aggregate;
-                    workerAttempts++;
-                    peakConcurrency = Math.Max(peakConcurrency, repaired.Work.PeakConcurrency);
-                    if (repaired.Work.Succeeded)
+                    var consumedBudget = repairBudget with
                     {
-                        verification = await verifier.VerifyAsync(goalId, repaired.Work, cancellationToken);
-                        verificationRuns++;
-                        aggregate = AddVerification(aggregate, workItem.Id, verification);
+                        ConsumedAttempts = Math.Max(repairBudget.ConsumedAttempts, 1),
+                        ConsumedIterations = Math.Max(repairBudget.ConsumedIterations, 1),
+                    };
+                    var repair = RepairPolicy.CreateRepair(verification, consumedBudget, workItem.Id);
+                    if (repair is not null)
+                    {
+                        repairCreated = true;
+                        aggregate = AddEvent(aggregate, "repair.created", $"attempt-{repair.AttemptNumber}");
+                        await store.SaveAsync(aggregate, cancellationToken);
+                        var repaired = await ExecuteAttemptAsync(aggregate, workItem, repair.AttemptNumber, true, cancellationToken);
+                        aggregate = repaired.Aggregate;
+                        workerAttempts++;
+                        peakConcurrency = Math.Max(peakConcurrency, repaired.Work.PeakConcurrency);
+                        if (repaired.Work.Succeeded)
+                        {
+                            verification = await verifier.VerifyAsync(goalId, repaired.Work, cancellationToken);
+                            verificationRuns++;
+                            aggregate = AddVerification(aggregate, workItem.Id, verification);
+                        }
                     }
                 }
             }
+
+            var outcome = aggregate.Evidence.Any(item => item.Kind == "verification-failed")
+                && !aggregate.Evidence.Any(item => item.Kind == "verification-passed" && item.Id.EndsWith($"-{verificationRuns}", StringComparison.Ordinal))
+                ? GoalStatus.Failed
+                : aggregate.Evidence.Any(item => item.Kind == "verification-passed") ? GoalStatus.Completed : GoalStatus.Failed;
+            aggregate = Complete(aggregate, workItem.Id, outcome, lease.Id);
+            await store.SaveAsync(aggregate, cancellationToken);
+
+            var evidence = aggregate.Evidence.Select(item => item.Uri).Distinct(StringComparer.Ordinal).ToArray();
+            await learning.PublishAsync(new(goalId, aggregate.Goal.CorrelationId, outcome, $"Goal {outcome} after {workerAttempts} worker attempt(s).", evidence), cancellationToken);
+            return new(aggregate, workerAttempts, verificationRuns, repairCreated, peakConcurrency);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            var failure = FailureClassifier.Classify(new OperationCanceledException("Loop execution cancelled by caller."), "gsd-orchestrator.LoopCoordinator");
+            logger.LogError(
+                "Loop execution failed for goal {GoalId} with failure class {FailureClass}: {Message}",
+                goalId,
+                failure.FailureClass,
+                failure.Message);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            var failure = FailureClassifier.Classify(ex, "gsd-orchestrator.LoopCoordinator");
+            logger.LogError(
+                ex,
+                "Loop execution failed for goal {GoalId} with failure class {FailureClass}: {Message}",
+                goalId,
+                failure.FailureClass,
+                failure.Message);
 
-        var outcome = aggregate.Evidence.Any(item => item.Kind == "verification-failed")
-            && !aggregate.Evidence.Any(item => item.Kind == "verification-passed" && item.Id.EndsWith($"-{verificationRuns}", StringComparison.Ordinal))
-            ? GoalStatus.Failed
-            : aggregate.Evidence.Any(item => item.Kind == "verification-passed") ? GoalStatus.Completed : GoalStatus.Failed;
-        aggregate = Complete(aggregate, workItem.Id, outcome, lease.Id);
-        await store.SaveAsync(aggregate, cancellationToken);
+            aggregate = await store.LoadAsync(goalId, cancellationToken) ?? aggregate;
+            var status = failure.FailureClass == FailureClass.Cancellation ? GoalStatus.Cancelled : GoalStatus.Failed;
+            var evidenceUri = $"cas://evidence/failure/{failure.FailureClass.ToString().ToLowerInvariant()}/{Guid.NewGuid():N}";
+            aggregate = CompleteWithFailure(aggregate, workItem.Id, lease.Id, status, failure, evidenceUri);
+            await store.SaveAsync(aggregate, cancellationToken);
 
-        var evidence = aggregate.Evidence.Select(item => item.Uri).Distinct(StringComparer.Ordinal).ToArray();
-        await learning.PublishAsync(new(goalId, aggregate.Goal.CorrelationId, outcome, $"Goal {outcome} after {workerAttempts} worker attempt(s).", evidence), cancellationToken);
-        return new(aggregate, workerAttempts, verificationRuns, repairCreated, peakConcurrency);
+            var evidence = aggregate.Evidence.Select(item => item.Uri).Distinct(StringComparer.Ordinal).ToArray();
+            await learning.PublishAsync(
+                new(goalId, aggregate.Goal.CorrelationId, status, failure.Message, evidence),
+                cancellationToken);
+            return new(aggregate, workerAttempts, verificationRuns, repairCreated, peakConcurrency);
+        }
     }
 
     private async Task<(GoalAggregate Aggregate, LoopWorkResult Work)> ExecuteAttemptAsync(
@@ -212,6 +251,46 @@ public sealed class LoopCoordinator(IGoalStore store, ILoopWorker worker, ILoopV
             BudgetReservations = [],
             Transitions = [.. aggregate.Transitions, new(Guid.NewGuid().ToString("N"), aggregate.Goal.Id, aggregate.Goal.Status.ToString(), status.ToString(), status == GoalStatus.Completed ? GoalStopReason.Passed.ToString() : GoalStopReason.Exhaustion.ToString(), now)],
             Events = [.. aggregate.Events, NewEvent(aggregate, status == GoalStatus.Completed ? "goal.completed" : "goal.failed", status.ToString().ToLowerInvariant())]
+        };
+    }
+
+    private static GoalAggregate CompleteWithFailure(
+        GoalAggregate aggregate,
+        string workItemId,
+        string leaseId,
+        GoalStatus status,
+        FailureState failure,
+        string evidenceUri)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var eventPayload = JsonSerializer.Serialize(new
+        {
+            failureClass = failure.FailureClass.ToString(),
+            component = failure.Component,
+            message = failure.Message,
+            retryable = failure.Retryable,
+            exceptionType = failure.ExceptionType,
+            causeChain = failure.CauseChain,
+            retryAfterSeconds = failure.RetryAfterSeconds,
+        });
+
+        return aggregate with
+        {
+            Goal = aggregate.Goal with { Status = status },
+            WorkItems = aggregate.WorkItems.Select(item => item.Id == workItemId
+                ? item with { Status = status == GoalStatus.Cancelled ? WorkItemStatus.Cancelled : WorkItemStatus.Failed }
+                : item).ToArray(),
+            Leases = aggregate.Leases.Where(item => item.Id != leaseId).ToArray(),
+            BudgetReservations = [],
+            Evidence = [.. aggregate.Evidence, new EvidenceRecord(Guid.NewGuid().ToString("N"), aggregate.Goal.Id, workItemId, "failure-state", evidenceUri)],
+            Transitions = [.. aggregate.Transitions, new(Guid.NewGuid().ToString("N"), aggregate.Goal.Id, aggregate.Goal.Status.ToString(), status.ToString(), status == GoalStatus.Cancelled ? GoalStopReason.Cancellation.ToString() : GoalStopReason.UnrecoverableFault.ToString(), now)],
+            Events =
+            [
+                .. aggregate.Events,
+                new GoalEventRecord(Guid.NewGuid().ToString("N"), aggregate.Goal.Id,
+                    aggregate.Events.Count == 0 ? 1 : aggregate.Events.Max(item => item.Sequence) + 1,
+                    "goal.failed", eventPayload, now)
+            ]
         };
     }
 
