@@ -10,7 +10,6 @@ opens a pull request with durable workflow state.
 **Stack:** .NET 10 (C#) · GitHub MCP Server · Anthropic Claude · Polly
 
 [![CI](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen)](https://github.com/Coding-Autopilot-System/gsd-orchestrator/actions/workflows/ci.yml)
 [![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -38,6 +37,18 @@ not just "AI edits code." The stronger signal is the operational model around th
 - **Auditability**: the lifecycle from issue to branch to PR is explicit and reproducible.
 
 See [docs/portfolio-proof.md](docs/portfolio-proof.md) for a concise reviewer-oriented summary.
+
+## Test Coverage
+
+The CI `Test` step runs the full xUnit suite (`src/GsdOrchestrator.Tests`) via `dotnet test`
+with `--collect:"XPlat Code Coverage"` and uploads the Cobertura results as a workflow
+artifact, but `main` does not yet fail the build on a coverage regression. A ratcheted
+branch-coverage gate is **in progress (PR #16)**: it adds a new `coverlet.runsettings`
+collector config and an "Enforce coverage" CI step that reads `branch-rate` (not line-rate)
+from the produced Cobertura XML and fails closed if it drops below a ratcheted baseline
+(measured at ~0.73 branch-rate in the PR, up from a ~0.69 starting point), emitting CAS JSON
+telemetry on pass/fail. Until PR #16 merges, coverage is collected and published as an
+artifact but not enforced.
 
 ## How It Works
 
@@ -232,3 +243,5 @@ GithubMCP/
         |-- Models/
         `-- States/
 ```
+
+<!-- docs-verified: a01b130c98cb7833d45cc7406f6002009f33557a 2026-07-08 -->
