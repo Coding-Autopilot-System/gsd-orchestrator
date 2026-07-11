@@ -10,4 +10,4 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
-    uses: Coding-Autopilot-System/.github/.github/workflows/release-please-reusable.yml@f288e5e3b67b29a2c08880b76da7b852f4a132d0
+    uses: Coding-Autopilot-System/.github/.github/workflows/release-please-reusable.yml@64c1673088ff7802f1270a44f03bc4d7a10631f2
