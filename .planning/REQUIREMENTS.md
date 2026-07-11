@@ -112,28 +112,28 @@
 
 ### CI Quality (CIQUAL)
 
-- [ ] **CIQUAL-01**: CI workflow runs `dotnet test` on every push/PR — not just build
-- [ ] **CIQUAL-02**: Coverlet coverage collected in CI — TRX report + XML coverage artifact uploaded
-- [ ] **CIQUAL-03**: Coverage badge in README showing current line coverage %
+- [x] **CIQUAL-01**: CI workflow runs `dotnet test` on every push/PR — not just build
+- [x] **CIQUAL-02**: Coverlet coverage collected in CI — TRX report + XML coverage artifact uploaded
+- [x] **CIQUAL-03**: Coverage badge in README showing current line coverage %
 
 ### Test Coverage (TESTCOV)
 
-- [ ] **TESTCOV-01**: `AnalyzingState` has dedicated xUnit test class (≥ 3 [Fact] tests covering Happy Path, Claude failure, and cancellation)
-- [ ] **TESTCOV-02**: `BranchingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
-- [ ] **TESTCOV-03**: `CommittingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
-- [ ] **TESTCOV-04**: `DocumentingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
-- [ ] **TESTCOV-05**: `EditingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
-- [ ] **TESTCOV-06**: `PrCreatingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [x] **TESTCOV-01**: `AnalyzingState` has dedicated xUnit test class (≥ 3 [Fact] tests covering Happy Path, Claude failure, and cancellation)
+- [x] **TESTCOV-02**: `BranchingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [x] **TESTCOV-03**: `CommittingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [x] **TESTCOV-04**: `DocumentingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [x] **TESTCOV-05**: `EditingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
+- [x] **TESTCOV-06**: `PrCreatingState` has dedicated xUnit test class (≥ 3 [Fact] tests)
 
 ### Checkpoint Hardening (CHKPT)
 
-- [ ] **CHKPT-01**: `GsdWorkflowContext` (WorkflowModels.cs) includes `SchemaVersion` string property, serialized to checkpoint JSON
-- [ ] **CHKPT-02**: `FileCheckpointStore.LoadAsync` checks `SchemaVersion` on load — logs warning and returns null (starts fresh) on version mismatch
+- [x] **CHKPT-01**: `GsdWorkflowContext` (WorkflowModels.cs) includes `SchemaVersion` string property, serialized to checkpoint JSON
+- [x] **CHKPT-02**: `FileCheckpointStore.LoadAsync` checks `SchemaVersion` on load — logs warning and returns null (starts fresh) on version mismatch
 
 ### Portfolio Polish (POLISH)
 
-- [ ] **POLISH-01**: GitHub topics applied to all CAS flagship repos (gsd-orchestrator, Promptimprover, autogen) — verified via `gh repo view --json repositoryTopics`
-- [ ] **POLISH-02**: OgeonX-Ai personal profile README exists in `OgeonX-Ai/.github` repo at `profile/README.md`, linking to Coding-Autopilot-System org and highlighting gsd-orchestrator, Promptimprover, autogen as system
+- [x] **POLISH-01**: GitHub topics applied to all CAS flagship repos (gsd-orchestrator, Promptimprover, autogen) — verified via `gh repo view --json repositoryTopics`
+- [x] **POLISH-02**: OgeonX-Ai personal profile README exists in `OgeonX-Ai/.github` repo at `profile/README.md`, linking to Coding-Autopilot-System org and highlighting gsd-orchestrator, Promptimprover, autogen as system
 
 ## v1 Deferred (still out of scope for v2)
 

@@ -19,3 +19,9 @@ packages/
 .DS_Store
 Thumbs.db
 .claude/
+
+.tmp-gh-*.ps1
+
+.tmp-venv*/
+
+TestResults/

@@ -458,8 +458,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 17-01-PLAN.md — Add `dotnet test` step to ci.yml with Coverlet XML + TRX output, upload coverage artifact (CIQUAL-01, CIQUAL-02)
-- [ ] 17-02-PLAN.md — Add coverage badge to README (shields.io from coverage.xml artifact) (CIQUAL-03)
+- [x] 17-01-PLAN.md — Add `dotnet test` step to ci.yml with Coverlet XML + TRX output, upload coverage artifact (CIQUAL-01, CIQUAL-02)
+- [x] 17-02-PLAN.md — Add coverage badge to README (shields.io from coverage.xml artifact) (CIQUAL-03)
 
 **Success Criteria:**
 - PR checks page shows a passing "test" step alongside the existing "build" step
@@ -480,9 +480,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Write AnalyzingStateTests.cs, BranchingStateTests.cs, EditingStateTests.cs (Wave 1 — read-heavy states) (TESTCOV-01, TESTCOV-02, TESTCOV-05)
-- [ ] 18-02-PLAN.md — Write CommittingStateTests.cs, DocumentingStateTests.cs, PrCreatingStateTests.cs (Wave 2 — write-heavy states) (TESTCOV-03, TESTCOV-04, TESTCOV-06)
-- [ ] 18-03-PLAN.md — Add SchemaVersion to GsdWorkflowContext in WorkflowModels.cs; add version check to FileCheckpointStore.LoadAsync; write 2 unit tests verifying mismatch handling (CHKPT-01, CHKPT-02)
+- [x] 18-01-PLAN.md — Write AnalyzingStateTests.cs, BranchingStateTests.cs, EditingStateTests.cs (Wave 1 — read-heavy states) (TESTCOV-01, TESTCOV-02, TESTCOV-05)
+- [x] 18-02-PLAN.md — Write CommittingStateTests.cs, DocumentingStateTests.cs, PrCreatingStateTests.cs (Wave 2 — write-heavy states) (TESTCOV-03, TESTCOV-04, TESTCOV-06)
+- [x] 18-03-PLAN.md — Add SchemaVersion to GsdWorkflowContext in WorkflowModels.cs; add version check to FileCheckpointStore.LoadAsync; write 2 unit tests verifying mismatch handling (CHKPT-01, CHKPT-02)
 
 **Success Criteria:**
 - `dotnet test` runs 53+ tests (35 existing + 18 new state tests + 2 checkpoint tests) all green
@@ -503,8 +503,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Apply GitHub topics to gsd-orchestrator, Promptimprover, autogen via `gh repo edit --add-topic`; verify via `gh repo view --json repositoryTopics` (POLISH-01)
-- [ ] 19-02-PLAN.md — Create/update OgeonX-Ai personal profile README at OgeonX-Ai/.github/profile/README.md — links to Coding-Autopilot-System org, highlights gsd-orchestrator/Promptimprover/autogen as a system (POLISH-02)
+- [x] 19-01-PLAN.md — Apply GitHub topics to gsd-orchestrator, Promptimprover, autogen via `gh repo edit --add-topic`; verify via `gh repo view --json repositoryTopics` (POLISH-01)
+- [x] 19-02-PLAN.md — Create/update OgeonX-Ai personal profile README at OgeonX-Ai/.github/profile/README.md — links to Coding-Autopilot-System org, highlights gsd-orchestrator/Promptimprover/autogen as a system (POLISH-02)
 
 **Success Criteria:**
 - `gh repo view Coding-Autopilot-System/gsd-orchestrator --json repositoryTopics` returns at least 5 topics including `autonomous-agent`, `dotnet`, `state-machine`

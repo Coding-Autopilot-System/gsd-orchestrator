@@ -245,6 +245,10 @@ static async Task RunWatchModeAsync(
                 interval.Repositories.Count);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Unhandled exception in watch mode interval; will retry next interval");
+        }
 
         try { await Task.Delay(pollInterval, ct); }
         catch (OperationCanceledException) { break; }
