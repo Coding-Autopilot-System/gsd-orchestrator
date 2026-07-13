@@ -1,4 +1,4 @@
-# Run this ONCE to set up the GitHub MCP Server auto-start.
+﻿# Run this ONCE to set up the GitHub MCP Server auto-start.
 # Does NOT require admin rights — uses per-user Task Scheduler.
 #
 # Usage: powershell -ExecutionPolicy Bypass -File C:\GithubMCP\install-autostart.ps1
