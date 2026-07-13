@@ -1,4 +1,4 @@
-# GitHub MCP Server — local HTTP startup script
+﻿# GitHub MCP Server — local HTTP startup script
 # Runs at Windows logon via Task Scheduler (registered by install-autostart.ps1)
 # Also usable standalone: powershell -ExecutionPolicy Bypass -File C:\GithubMCP\start-mcp-server.ps1
 
